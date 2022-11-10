@@ -1,10 +1,10 @@
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/time.h>
+// #include <errno.h>
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <unistd.h>
+// #include <sys/time.h>
 #include <sys/select.h>
-#include <time.h>
+// #include <time.h>
 #include "soc.h"
 #include "philosopher.h"
 
@@ -15,6 +15,7 @@ void printt(int array[]);
 
 int main(int argc, char *argv[])
 {
+	printf("\nIN CENTRAL COORD:\n");
 	time_t t = time(0);
 
 	/* initiate variables */
@@ -24,16 +25,24 @@ int main(int argc, char *argv[])
 	int sSocket;				 // server socket
 	struct sockaddr_in sAddr;	 // server socket addr
 	struct sockaddr_in cAddr[N]; // client socket addr
-	int cSocLen;				 // client socket length
-	char msg[BUFFLEN];			 // buffer
-	int status;					 // child process exit status
+	// int cSocLen;				// client socket length
+	socklen_t cSocLen;
+	// printf("\nIN CENTRAL COORD2\n");
+	char msg[BUFFLEN]; // buffer
+	int status;		   // child process exit status
 	int nfd;
 	fd_set RFD;
 	struct timeval waitTime; // wait time
+
 	int ADDPORT = atoi(argv[1]);
+	printf("\nIN CENTRAL COORD2\n");
 	char TIME0[30];
-	sprintf(TIME0, "%d", t);
+
+	sprintf(TIME0, "%ld", t); // TODO AFTER THIS DOESNT WORK TODO
+	printf("\nIN CENTRAL COORD3\n");
+	// printf("%ld\n", nc);
 	int t0 = atoi(TIME0);
+	// printf("\nIN CENTRAL COORD:\n");
 
 	/* set up coordinator socket */
 	sSocket = socket(AF_INET, SOCK_STREAM, 0); // AF_INET
@@ -58,7 +67,6 @@ int main(int argc, char *argv[])
 	}
 	printf("Coordinator setup successfully...\n");
 	printf("About to run %d processes...\n\n", N);
-
 	// Execl 5 philosophers
 	for (i = 0; i < N; i++)
 	{
