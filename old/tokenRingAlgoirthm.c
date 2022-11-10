@@ -13,7 +13,6 @@ int packToken(int c[], int thisID);
 
 int main(int argc, char *argv[])
 {
-	printf("\nIN tokenRingalgo\n");
 	/* init */
 	int err;					 // Errors handler
 	int i;						 // Counter
@@ -37,7 +36,6 @@ int main(int argc, char *argv[])
 	int nfd;
 	fd_set RFD;
 	struct timeval waitTime; // wait time
-	printf("\nPORT: %d\n", ADDPORT);
 
 	/* Set up this philosopher socket */
 	thisSocket = socket(AF_INET, SOCK_STREAM, 0); // AF_INET

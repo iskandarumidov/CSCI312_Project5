@@ -1,19 +1,13 @@
-all: clean centralCoord philosopher tokenRingAlgoirthm starter
+all: centralCoord
 
-centralCoord: soc.h philosopher.h centralCoord.c
-	$(CC) -o startC centralCoord.c
-
-philosopher: soc.h philosopher.h philosopher.c
-	$(CC) -o philosopher philosopher.c
-
-tokenNode: soc.h philosopher.h tokenRingAlgoirthm.c
-	$(CC) -o tokenRingAlgoirthm tokenRingAlgoirthm.c
-
-starter: soc.h philosopher.h tokenRingStarter.c
-	$(CC) -o startTR tokenRingStarter.c
+centralCoord:
+	cc -o ./bin/startC centralCoord.c
+	cc -o ./bin/philosopher philosopher.c
+	cc -o ./bin/tokenRingAlgoirthm tokenRingAlgoirthm.c
+	cc -o ./bin/startTR tokenRingStarter.c
 
 clean:
-	rm -f startC
-	rm -f startTR
-	rm -f philosopher
-	rm -f tokenRingAlgoirthm
+	rm -f ./bin/startC
+	rm -f ./bin/startTR
+	rm -f ./bin/philosopher
+	rm -f ./bin/tokenRingAlgoirthm

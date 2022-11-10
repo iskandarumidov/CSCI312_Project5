@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 		}
 		else if (pid == 0)
 		{ /* in child process */
-			execl("./philosopher", "philosopher", id, argv[1], TIME0);
+			execl("./bin/philosopher", "philosopher", id, argv[1], TIME0);
 		}
 		cSocket[i] = accept(sSocket, (struct sockaddr *)&cAddr[i], &cSocLen);
 		printf("P[%c] connected.\n", id[0]);
