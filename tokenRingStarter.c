@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
 
 	for (i = 1; i < N + 1; i++)
 	{
-		// printf("\nAbout to run %d processes...\n", N);
 		char id[1];
 		id[0] = i + '0';
 
@@ -27,7 +26,9 @@ int main(int argc, char *argv[])
 		}
 		else if (pid == 0)
 		{ /* in child process */
-			execl("./tokenRingAlgorithm", "./tokenRingAlgorithm", id, argv[1]);
+			// execl("./tokenRingAlgoirthm", "tokenRingAlgoirthm", id, argv[1]);
+			// execl("./tokenRingAlgoirthm", "tokenRingAlgoirthm", id, "31200", (char *)NULL);
+			execl("./bin/tokenRingAlgoirthm", "tokenRingAlgoirthm", id, "31200", (char *)NULL);
 		}
 	}
 

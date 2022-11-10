@@ -17,8 +17,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <sys/time.h>
 #include <fcntl.h>
-#include <pthread.h>
+// #include <pthread.h>
 #include <sys/syscall.h>
 
 #define SERVERPORT 31200
