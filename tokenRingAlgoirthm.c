@@ -1,10 +1,3 @@
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <sys/select.h>
-#include <time.h>
 #include "soc.h"
 #include "philosopher.h"
 

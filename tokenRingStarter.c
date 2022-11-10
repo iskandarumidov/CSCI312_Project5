@@ -1,8 +1,3 @@
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
 #include "soc.h"
 #include "philosopher.h"
 
@@ -27,7 +22,6 @@ int main(int argc, char *argv[])
 		else if (pid == 0)
 		{ /* in child process */
 			// execl("./tokenRingAlgoirthm", "tokenRingAlgoirthm", id, argv[1]);
-			// execl("./tokenRingAlgoirthm", "tokenRingAlgoirthm", id, "31200", (char *)NULL);
 			execl("./bin/tokenRingAlgoirthm", "tokenRingAlgoirthm", id, "31200", (char *)NULL);
 		}
 	}

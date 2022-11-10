@@ -3,6 +3,15 @@
         "time.h": "c",
         "socket.h": "c",
         "inet.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "unistd.h": "c",
+        "mman.h": "c",
+        "select.h": "c",
+        "signal.h": "c",
+        "stdlib.h": "c",
+        "netdb.h": "c",
+        "stdio.h": "c",
+        "in.h": "c",
+        "strings.h": "c"
     }
 }

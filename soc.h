@@ -19,8 +19,9 @@
 #include <time.h>
 #include <sys/time.h>
 #include <fcntl.h>
-// #include <pthread.h>
 #include <sys/syscall.h>
+#include <sys/mman.h>
+#include <sys/select.h>
 
 #define SERVERPORT 31200
 #define SERVERIP "127.0.0.1"
