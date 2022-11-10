@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
 	struct sockaddr_in cAddr[N]; // client socket addr
 	// int cSocLen;				// client socket length
 	socklen_t cSocLen;
-	// printf("\nIN CENTRAL COORD2\n");
 	char msg[BUFFLEN]; // buffer
 	int status;		   // child process exit status
 	int nfd;
@@ -38,11 +37,10 @@ int main(int argc, char *argv[])
 	printf("\nIN CENTRAL COORD2\n");
 	char TIME0[30];
 
-	sprintf(TIME0, "%ld", t); // TODO AFTER THIS DOESNT WORK TODO
+	sprintf(TIME0, "%ld", t);
 	printf("\nIN CENTRAL COORD3\n");
 	// printf("%ld\n", nc);
 	int t0 = atoi(TIME0);
-	// printf("\nIN CENTRAL COORD:\n");
 
 	/* set up coordinator socket */
 	sSocket = socket(AF_INET, SOCK_STREAM, 0); // AF_INET
