@@ -3,6 +3,7 @@
 
 #define SEPS "EC;"
 #define PHILOSOPHER_COUNT 5
+// #define NULL 0 // TODO - bad practice?
 // TODO - in common header - know all addresses/ports?
 // TODO - know just the next one?
 // TODO - highest philosopher ID will be always different node because it's random
@@ -22,7 +23,7 @@ int get_random_in_range(int low, int high);
 int str_length(char str[]);
 void set_coordinator_next(char str[]);
 
-int id = 78;
+int id = 123;
 int next_id = -1;
 int coordinator = -1;
 
@@ -48,13 +49,14 @@ int main(int argc, char *argv[])
         set_coordinator_next(str);
         printf("COORDINATOR: %d\n", coordinator);
         printf("NEXT: %d\n", next_id);
+        // TODO - if coordinator detected, stop listening for other messages
     }
     printf("RAND: %d\n", get_random_in_range(0, 10)); // TODO - needs to move to launcher
     // detect if I am the coordinator
     if (coordinator == id)
     {
         // do execl
-        execl("./coordinator", "coordinator", id, "31200", (char *)NULL);
+        execl("./coordinator", "coordinator", (char *)NULL); // TODO - need err check?
     }
 
     return 0;
