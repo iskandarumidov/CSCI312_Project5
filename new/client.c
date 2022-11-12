@@ -48,6 +48,9 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    err = read(sock_fd, buffer, sizeof(buffer));
+    printf("FROM SERVER: %s\n", buffer);
+
     print_log("Closing the Connection...\n");
     close(sock_fd);
 

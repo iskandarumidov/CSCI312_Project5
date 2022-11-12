@@ -57,7 +57,9 @@ int main(int argc, char *argv[])
     setup_server();
 
     err = read(newsockfd, buf, sizeof(buf));
-    printf("BUF: %s\n", buf);
+    printf("FROM CLIENT: %s\n", buf);
+
+    err = write(sock_fd, buf, sizeof(buf));
 
     close(sock_fd); // close old socket file descriptor
     close(newsockfd);

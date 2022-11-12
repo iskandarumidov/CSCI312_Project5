@@ -21,6 +21,8 @@
         "__config": "c",
         "__nullptr": "c",
         "soc.h": "c",
-        "philosopher.h": "c"
+        "philosopher.h": "c",
+        "iostream": "c",
+        "_types.h": "c"
     }
 }

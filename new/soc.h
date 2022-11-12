@@ -24,13 +24,18 @@
 #include <sys/select.h>
 
 char *timestamp();
+int get_random_in_range(int low, int high);
+// void setAddr(sockaddr_in *thisAddr, int thisID, int ADDPORT);
+
 #define print_log(f_, ...) printf("[%s] ", timestamp()), printf((f_), ##__VA_ARGS__), printf("")
 #define SERVERPORT 31200
 #define SERVERIP "127.0.0.1"
 #define BUFFLEN 50
-#define NULL 0 // TODO - bad practice?
+#define NULL 0
 #define MAX_CLIENT_QUEUE 5
 #define BUFFER_LEN 256
+#define SEPS "EC;"
+#define PHILOSOPHER_COUNT 5
 
 typedef struct sockaddr_in sockaddr_in;
 
@@ -45,9 +50,17 @@ void setAddr(sockaddr_in *thisAddr, int thisID, int ADDPORT)
 char *timestamp()
 {
 	time_t now = time(NULL);
-	char *time = asctime(gmtime(&now));
-	time[strlen(time) - 1] = '\0';
-	return time;
+	char *time_arr = asctime(gmtime(&now));
+	time_arr[strlen(time_arr) - 1] = '\0';
+	return time_arr;
+}
+
+int get_random_in_range(int low, int high)
+{
+	srand(time(NULL));
+	return (rand() % (high - low + 1)) + low;
 }
 
 #endif
+
+// cc -Wno-macro-redefined client.c -o sender

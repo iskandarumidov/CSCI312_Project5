@@ -1,9 +1,6 @@
 #include "soc.h"
 #include "philosopher.h"
 
-#define SEPS "EC;"
-#define PHILOSOPHER_COUNT 5
-// #define NULL 0 // TODO - bad practice?
 // TODO - in common header - know all addresses/ports?
 // TODO - know just the next one?
 // TODO - highest philosopher ID will be always different node because it's random
@@ -19,13 +16,21 @@
 //     int isThink;
 // } Next;
 
-int get_random_in_range(int low, int high);
 int str_length(char str[]);
 void set_coordinator_next(char str[]);
+void setup_server();
 
 int id = 123;
 int next_id = -1;
 int coordinator = -1;
+
+int sock_fd,   // Original Socket for serverC
+    newsockfd, // New socket for serverG
+    pid;       // PID for Fork
+char buf[256];
+socklen_t clientLength;
+struct sockaddr_in serv_adr, client_adr;
+int err;
 
 int main(int argc, char *argv[])
 {
@@ -60,12 +65,6 @@ int main(int argc, char *argv[])
     }
 
     return 0;
-}
-
-int get_random_in_range(int low, int high)
-{
-    srand(time(NULL));
-    return (rand() % (high - low + 1)) + low;
 }
 
 int str_length(char str[])
@@ -104,4 +103,44 @@ void set_coordinator_next(char str[])
     }
 
     coordinator = max;
+}
+
+void setup_server()
+{
+    printf("SERVERC: Creating socket\n");
+    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock_fd < 0)
+    {
+        printf("SERVERC: Socket opening failed\n");
+        exit(EXIT_FAILURE);
+    }
+    bzero((char *)&serv_adr, sizeof(serv_adr));
+    memset(&serv_adr, 0, sizeof(struct sockaddr_in));
+
+    serv_adr.sin_family = AF_INET;
+    serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serv_adr.sin_port = htons(SERVERPORT);
+
+    printf("SERVERC: Binding the Socket\n");
+
+    if (bind(sock_fd, (struct sockaddr *)&serv_adr, sizeof(serv_adr)) < 0)
+    {
+        printf("SERVERC: Binding to socket failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (listen(sock_fd, MAX_CLIENT_QUEUE) == -1)
+    {
+        printf("SERVERC: Binding to socket failed\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("SERVERC: New Server created on IP: %s | Port: %d\n", SERVERIP, SERVERPORT);
+
+    clientLength = sizeof(client_adr);
+    newsockfd = accept(sock_fd, (struct sockaddr *)&client_adr, &clientLength);
+    if (newsockfd < 0)
+    {
+        printf("SERVERC: Socket accept failed\n");
+        exit(EXIT_FAILURE);
+    }
 }
