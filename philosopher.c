@@ -24,8 +24,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	// connect to coordinator
-	err = connect(cSocket, (struct sockaddr *)&cAddr,
-				  sizeof(struct sockaddr_in));
+	err = connect(cSocket, (struct sockaddr *)&cAddr, sizeof(struct sockaddr_in));
 	if (err == -1)
 	{
 		perror("Philosopher: connect failed");
@@ -44,8 +43,7 @@ int main(int argc, char *argv[])
 		err = -1;
 		if (p.isEat == 0 && p.isThink == 0)
 		{
-			printf("TS%.0f. P[%d] wants to eat\n",
-				   difftime(time(NULL), t0), thisID);
+			printf("TS%.0f. P[%d] wants to eat\n", difftime(time(NULL), t0), thisID);
 			sprintf(msg, "q%d%d%d", thisID, leftToken, rightToken);
 			err = send(cSocket, msg, 8, 0);
 		}
@@ -56,17 +54,14 @@ int main(int argc, char *argv[])
 		} while (err == -1 && errno == EINTR && msg[1] == 'o');
 
 		// Eat
-		printf("TS%.0f. P[%d] picks up %d and %d\n",
-			   difftime(time(NULL), t0), thisID, (leftToken == 0) ? 5 : leftToken, (rightToken == 0) ? 5 : rightToken);
+		printf("TS%.0f. P[%d] picks up %d and %d\n", difftime(time(NULL), t0), thisID, (leftToken == 0) ? 5 : leftToken, (rightToken == 0) ? 5 : rightToken);
 		p.isEat = 1;
 		srand(time(NULL) + thisID);
 		int t = rand() % 3 + 2;
-		printf("TS%.0f. P[%d] is eating in %ds\n",
-			   difftime(time(NULL), t0), thisID, t);
+		printf("TS%.0f. P[%d] is eating in %ds\n", difftime(time(NULL), t0), thisID, t);
 		sleep(t);
 		// Done eat
-		printf("TS%.0f. P[%d] releases %d and %d\n",
-			   difftime(time(NULL), t0), thisID, leftToken, rightToken);
+		printf("TS%.0f. P[%d] releases %d and %d\n", difftime(time(NULL), t0), thisID, leftToken, rightToken);
 		p.isEat = 0;
 		sprintf(msg, "r%d%d%d", thisID, leftToken, rightToken);
 		err = send(cSocket, msg, 8, 0);
@@ -75,8 +70,7 @@ int main(int argc, char *argv[])
 		p.isThink = 1;
 		srand(time(NULL) + thisID);
 		t = rand() % 3 + 2;
-		printf("TS%.0f. P[%d] is thinking in %ds\n",
-			   difftime(time(NULL), t0), thisID, t);
+		printf("TS%.0f. P[%d] is thinking in %ds\n", difftime(time(NULL), t0), thisID, t);
 		sleep(t);
 		// Done think
 		p.isThink = 0;

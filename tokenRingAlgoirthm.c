@@ -7,16 +7,15 @@ int packToken(int c[], int thisID);
 int main(int argc, char *argv[])
 {
 	/* init */
-	int err;					 // Errors handler
-	int i;						 // Counter
-	int thisSocket;				 // This philosopher's socket
-	int nextSocket;				 // Next philosopher's socket
-	int prevSocket;				 // Previous philosopher's socket
-	struct sockaddr_in thisAddr; // This philosopher's address
-	struct sockaddr_in nextAddr; // Next philosopher's address
-	struct sockaddr_in prevAddr; // Previous philosopher's address
-	socklen_t socLen;
-	// int socLen = sizeof(struct sockaddr_in);				// Socket length
+	int err;												// Errors handler
+	int i;													// Counter
+	int thisSocket;											// This philosopher's socket
+	int nextSocket;											// Next philosopher's socket
+	int prevSocket;											// Previous philosopher's socket
+	struct sockaddr_in thisAddr;							// This philosopher's address
+	struct sockaddr_in nextAddr;							// Next philosopher's address
+	struct sockaddr_in prevAddr;							// Previous philosopher's address
+	socklen_t socLen;										// Socket length
 	char err_msg[BUFFLEN];									// Error message
 	char send_msg[BUFFLEN];									// Sending message
 	char recv_msg[BUFFLEN];									// Receiving message
@@ -39,8 +38,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	setAddr(&thisAddr, thisID, ADDPORT);
-	err = bind(thisSocket, (struct sockaddr *)&thisAddr,
-			   sizeof(struct sockaddr_in));
+	err = bind(thisSocket, (struct sockaddr *)&thisAddr, sizeof(struct sockaddr_in));
 	if (err == -1)
 	{
 		sprintf(err_msg, "P[%d]: bind address to socket failed", thisID);
@@ -66,13 +64,11 @@ int main(int argc, char *argv[])
 		perror(err_msg);
 		exit(2);
 	}
-	err = connect(nextSocket, (struct sockaddr *)&nextAddr,
-				  sizeof(struct sockaddr_in));
+	err = connect(nextSocket, (struct sockaddr *)&nextAddr, sizeof(struct sockaddr_in));
 	printf("ID[%d]: Connects port %d\n", thisID, ntohs(nextAddr.sin_port));
 
 	/* Accept the previous philosopher's connection */
-	prevSocket = accept(thisSocket, (struct sockaddr *)&prevAddr,
-						&socLen);
+	prevSocket = accept(thisSocket, (struct sockaddr *)&prevAddr, &socLen);
 	sleep(1); // wait for everybody to be ready
 
 	/* At this point, the ring is created */
@@ -116,13 +112,11 @@ int main(int argc, char *argv[])
 			{
 				// And this philosopher can eat
 				// Start eating, picking up forks
-				printf("TS%.0f. P[%d]: Has token. Ready to eat.\n",
-					   difftime(time(0), t0), thisID);
+				printf("TS%.0f. P[%d]: Has token. Ready to eat.\n", difftime(time(0), t0), thisID);
 				p.isEat = 1;
 				tokens[p.leftToken] = 0;
 				tokens[p.rightToken] = 0;
-				printf("P[%d]: Pick up %d and %d\n",
-					   thisID, p.leftToken, p.rightToken);
+				printf("P[%d]: Pick up %d and %d\n", thisID, p.leftToken, p.rightToken);
 				printAvailable(tokens, thisID);
 
 				// Eating
@@ -138,8 +132,7 @@ int main(int argc, char *argv[])
 					// Child process
 					srand(time(NULL) + thisID);
 					int r = rand() % 3 + 2;
-					printf("TS%.0f. P[%d] is eating in %ds.\n",
-						   difftime(time(0), t0), thisID, r);
+					printf("TS%.0f. P[%d] is eating in %ds.\n", difftime(time(0), t0), thisID, r);
 					sleep(r);
 					exit(0);
 				}
@@ -151,8 +144,7 @@ int main(int argc, char *argv[])
 				err = waitpid(-1, &status, WNOHANG);
 				if (err > 0)
 				{ // Done thinking
-					printf("TS%.0f. P[%d] has done thinking.\n",
-						   difftime(time(0), t0), thisID);
+					printf("TS%.0f. P[%d] has done thinking.\n", difftime(time(0), t0), thisID);
 					p.isThink = 0;
 				}
 			}
@@ -163,11 +155,9 @@ int main(int argc, char *argv[])
 				err = waitpid(-1, &status, WNOHANG);
 				if (err > 0)
 				{ // Done eating
-					printf("TS%.0f. P[%d] has done eating.\n",
-						   difftime(time(0), t0), thisID);
+					printf("TS%.0f. P[%d] has done eating.\n", difftime(time(0), t0), thisID);
 					// Release tokens
-					printf("P[%d]: Release %d and %d\n",
-						   thisID, p.leftToken, p.rightToken);
+					printf("P[%d]: Release %d and %d\n", thisID, p.leftToken, p.rightToken);
 					tokens[p.leftToken] = p.leftToken;
 					tokens[p.rightToken] = p.rightToken;
 					printAvailable(tokens, thisID);
@@ -185,8 +175,7 @@ int main(int argc, char *argv[])
 						// Child process
 						srand(time(NULL) + thisID);
 						int r = rand() % 3 + 2;
-						printf("TS%.0f. P[%d] is thinking in %ds.\n",
-							   difftime(time(0), t0), thisID, r);
+						printf("TS%.0f. P[%d] is thinking in %ds.\n", difftime(time(0), t0), thisID, r);
 						sleep(r);
 						exit(0);
 					}
@@ -195,7 +184,10 @@ int main(int argc, char *argv[])
 
 			// Send token to next process
 			int packedToken = packToken(tokens, thisID);
+
 			sprintf(send_msg, "%d", packedToken);
+			printf("PACKED TOKEN: %d\n", packedToken);
+			usleep(100);
 			err = send(nextSocket, send_msg, 8, 0);
 			haveToken = 0;
 		}

@@ -43,8 +43,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	setAddr(&sAddr, 0, ADDPORT);
-	err = bind(sSocket, (struct sockaddr *)&sAddr,
-			   sizeof(struct sockaddr_in));
+	err = bind(sSocket, (struct sockaddr *)&sAddr, sizeof(struct sockaddr_in));
 	if (err == -1)
 	{
 		perror("socServer: bind address to socket failed");
@@ -117,15 +116,13 @@ int main(int argc, char *argv[])
 					printt(chopsticks);
 					chopsticks[left] = 0;
 					chopsticks[right] = 0;
-					printf("TS%.0f. Coord: P[%d] can eat\n",
-						   difftime(time(NULL), t0), thisID);
+					printf("TS%.0f. Coord: P[%d] can eat\n", difftime(time(NULL), t0), thisID);
 					sprintf(msg, "%c", 'o');
 					send(cSocket[thisID - 1], msg, 8, 0);
 				}
 				else
 				{
-					printf("TS%.0f. Coord: P[%d] must wait\n",
-						   difftime(time(NULL), t0), thisID);
+					printf("TS%.0f. Coord: P[%d] must wait\n", difftime(time(NULL), t0), thisID);
 					enqueue(queue, thisID);
 					printq(queue);
 				}
@@ -147,8 +144,7 @@ int main(int argc, char *argv[])
 						printt(chopsticks);
 						chopsticks[leftToken] = 0;
 						chopsticks[rightToken] = 0;
-						printf("TS%.0f. Coord: P[%d] can eat\n",
-							   difftime(time(NULL), t0), id);
+						printf("TS%.0f. Coord: P[%d] can eat\n", difftime(time(NULL), t0), id);
 						dequeue(queue, i);
 						printq(queue);
 						sprintf(msg, "%d", 1);

@@ -12,6 +12,15 @@
         "netdb.h": "c",
         "stdio.h": "c",
         "in.h": "c",
-        "strings.h": "c"
+        "strings.h": "c",
+        "__bit_reference": "c",
+        "bitset": "c",
+        "chrono": "c",
+        "unordered_map": "c",
+        "sstream": "c",
+        "__config": "c",
+        "__nullptr": "c",
+        "soc.h": "c",
+        "philosopher.h": "c"
     }
 }
