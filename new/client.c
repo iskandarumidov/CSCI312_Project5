@@ -1,4 +1,3 @@
-// Client connects to serverC and then plays the tic-tac-toe game with serverG
 #include "soc.h"
 
 int sock_fd;                  // Original Socket in Server

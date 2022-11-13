@@ -1,6 +1,3 @@
-// ServerC is responsible for receiving a request from client and forking a child, serverG,
-// to handle the tic-tac-toe game with the client
-
 #include "soc.h"
 
 int sock_fd,   // Original Socket for serverC
