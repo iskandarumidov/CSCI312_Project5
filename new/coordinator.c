@@ -1,12 +1,16 @@
 #include "soc.h"
-// #include "philosopher.h"
+#include "queue.c"
+
+int id = -1;
+int self_read_port = -1;
 
 int main(int argc, char *argv[])
 {
-    // TODO - need to copy port arrays from startup
-    // TODO - coord receives parent's philosopher ID
-    // TODO - coord also receives its own listening port?
+    id = atoi(argv[1]);
+    self_read_port = atoi(argv[2]);
+
     printf("NOW I AM COORDINATOR!\n");
+    dequeue();
 
     return 0;
 }

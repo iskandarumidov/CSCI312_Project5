@@ -36,8 +36,8 @@ int get_random_in_range(int low, int high);
 #define SEPARATORS "EC;"
 #define PHILOSOPHER_COUNT 6
 
-int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};
-int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200};
+int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};	 // PHIL reads at this
+int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200}; // PHIL writes here
 // int read_ports[6] = {31200, 31201};
 // int write_ports[6] = {31201, 31200};
 
@@ -66,12 +66,11 @@ char *timestamp()
 // }
 
 int not_random = 0;
+// int not_random = 5;
 // BUG - not so random!
 int get_random_in_range(int low, int high)
 {
 	return not_random++;
-	// srand(time(NULL));
-	// return (rand() % (high - low + 1)) + low;
 }
 
 #endif

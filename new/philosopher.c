@@ -1,9 +1,5 @@
 #include "soc.h"
 
-// TODO - highest philosopher ID will be always different node because it's random
-// TODO - So can set one node to run algo first always?
-// TODO - need to remember to cut out coordinator from ring
-
 int str_length(char str[]);
 void set_coordinator_next(char str[]);
 void setup_server();
@@ -12,7 +8,6 @@ void append_cur_id();
 void check_syscall_err(int syscall_err, char *syscall_err_msg);
 
 int id = -1;
-// int next_id = -1;
 int coordinator = -1;
 
 int sock_read;
@@ -124,7 +119,6 @@ int main(int argc, char *argv[])
 
         // TODO - now think of logic to cut out the coordinator and rearrange the ring
     }
-    // TODO - need to think of a mechanism of switching from reading to writing mode?
 
     // close(sock_read);
     // close(new_sock_read);
@@ -133,7 +127,7 @@ int main(int argc, char *argv[])
     set_coordinator_next(coordinator_message);
     print_log("COORDINATOR: %d, NEXT PORT: %d\n", coordinator, next_write_port);
 
-    // BUG - important - need to find port from message. Also determine next port from message. Prob delete next philid, jut need port
+    // BUG - important - need to find port from message
 
     // detect if I am the coordinator
     if (coordinator == id)
@@ -142,6 +136,9 @@ int main(int argc, char *argv[])
         // err = execl("./coordinator", "coordinator", (char *)NULL);
         // check_syscall_err(err, "Execl failed");
     }
+
+    // If I'm here, it means I'm not the coordinator
+    // Need to replace next port by coordinator's port?
 
     return EXIT_SUCCESS;
 }
@@ -200,7 +197,7 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
         i++;
     }
     print_log("========DONE WITH WHILE. MAX: %d, COORD_INDEX: %d, MY_INDEX: %d\n", max, coordinator_index, my_index);
-    // BUG - here to determine if next port is to be changed
+    // BUG - here to determine if next port is to be changed. ALSO - need to include if self is coordinator?
     if (my_index + 1 == coordinator_index && coordinator_index == PHILOSOPHER_COUNT - 1) // BUG - PHILOSOPHER_COUNT - off-by-one errors!
     {
         print_log("========FIRST_IF, %d\n", read_ports[0]);
@@ -216,15 +213,6 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
         print_log("========THIRD_IF, %d\n", read_ports[my_index + 2]);
         next_write_port = read_ports[my_index + 2];
     }
-
-    // for (i = 0; i < PHILOSOPHER_COUNT; ++i)
-    // {
-    //     if (id_ints[i] == id)
-    //     {
-    //         next_id = ((i == PHILOSOPHER_COUNT - 1) ? id_ints[0] : id_ints[i + 1]);
-    //         break;
-    //     }
-    // }
 
     coordinator = max;
 }
