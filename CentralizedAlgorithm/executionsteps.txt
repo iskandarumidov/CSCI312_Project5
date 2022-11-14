@@ -1,0 +1,8 @@
+Clean previous executables using Linux terminal command: make clean
+Compile the code in a Linux terminal using command: make
+Start Centralized sever by entering following command in terminal: ./serverCentralized localhost &
+Start Centralized clients by entering the following command in terminal: ./sc 5
+Every client/philosopher runs (does eat&think process) for a total of 15 counts and then terminates itself.
+Once all clients terminate, enter the following command in terminal to see all running processes: ps
+Use the following command followed by the process id to kill all unterminated processes: kill
+Clean the executables by using command: make clean 
