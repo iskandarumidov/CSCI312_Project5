@@ -9,6 +9,7 @@ void set_coordinator_next(char str[]);
 void setup_server();
 void setup_client();
 void append_cur_id();
+void check_syscall_err(int syscall_err, char *syscall_err_msg);
 
 int id = -1;
 int next_id = -1;
@@ -52,31 +53,16 @@ int main(int argc, char *argv[])
         // Start election
         setup_client();
 
-        // char id_char[100];
-        // sprintf(id_char, "%d", id);
-        // char semicolon_char[100];
-        // sprintf(semicolon_char, "%c", ';');
-
-        // strncat(election_message, id_char, str_length(id_char));
-        // strncat(election_message, semicolon_char, str_length(semicolon_char));
         append_cur_id();
         print_log("Appended String to send: %s\n", election_message);
 
         err = write(sock_write, election_message, sizeof(election_message));
-        if (err == -1) // TODO - put syscall err check in separate function
-        {
-            print_log("Write err\n");
-            exit(EXIT_FAILURE);
-        }
+        check_syscall_err(err, "write error");
 
         close(sock_write);
         setup_server();
         err = read(new_sock_read, buffer, sizeof(buffer));
-        if (err == -1)
-        {
-            print_log("Read err\n");
-            exit(EXIT_FAILURE);
-        }
+        check_syscall_err(err, "read error");
         print_log("FROM CLIENT: %s\n", buffer);
     }
     else
@@ -84,11 +70,8 @@ int main(int argc, char *argv[])
         // I am not to start election. Listen for incoming requests with election message
         setup_server();
         err = read(new_sock_read, buffer, sizeof(buffer));
-        if (err == -1)
-        {
-            print_log("Read err\n");
-            exit(EXIT_FAILURE);
-        }
+        check_syscall_err(err, "read error");
+
         print_log("FROM CLIENT: %s\n", buffer);
         sprintf(election_message, "%s", buffer);
         append_cur_id();
@@ -98,11 +81,7 @@ int main(int argc, char *argv[])
         sleep(1);
         setup_client();
         err = write(sock_write, election_message, sizeof(election_message));
-        if (err == -1)
-        {
-            print_log("Write err\n");
-            exit(EXIT_FAILURE);
-        }
+        check_syscall_err(err, "write error");
     }
     // TODO - need to think of a mechanism of switching from reading to writing mode?
 
@@ -138,11 +117,20 @@ int main(int argc, char *argv[])
     // detect if I am the coordinator
     if (coordinator == id)
     {
-        // do execl
-        execl("./coordinator", "coordinator", (char *)NULL); // TODO - need err check?
+        err = execl("./coordinator", "coordinator", (char *)NULL); // TODO - need err check?
+        check_syscall_err(err, "Execl failed");
     }
 
-    return 0;
+    return EXIT_SUCCESS;
+}
+
+void check_syscall_err(int syscall_err, char *syscall_err_msg)
+{
+    if (syscall_err == -1)
+    {
+        print_log("Error - %s\n", syscall_err_msg);
+        exit(EXIT_FAILURE);
+    }
 }
 
 void append_cur_id()
@@ -198,59 +186,33 @@ void setup_server()
 {
     print_log("Creating socket\n");
     sock_read = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_read < 0)
-    {
-        print_log("Socket opening failed\n");
-        exit(EXIT_FAILURE);
-    }
+    check_syscall_err(sock_read, "Socket opening failed");
 
     serv_adr.sin_family = AF_INET;
     serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_adr.sin_port = htons(self_read_port);
 
     print_log("Binding the Socket\n");
-
-    if (bind(sock_read, (struct sockaddr *)&serv_adr, sizeof(serv_adr)) < 0)
-    {
-        print_log("Binding to socket failed\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (listen(sock_read, MAX_CLIENT_QUEUE) == -1)
-    {
-        print_log("Binding to socket failed\n");
-        exit(EXIT_FAILURE);
-    }
+    check_syscall_err(bind(sock_read, (struct sockaddr *)&serv_adr, sizeof(serv_adr)), "Binding to socket failed");
+    check_syscall_err(listen(sock_read, MAX_CLIENT_QUEUE), "Listening to socket failed");
     print_log("New Server created on IP: %s | Port: %d\n", SERVERIP, self_read_port);
 
     clientLength = sizeof(client_adr);
     new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
-    if (new_sock_read < 0)
-    {
-        print_log("Socket accept failed\n");
-        exit(EXIT_FAILURE);
-    }
+    check_syscall_err(new_sock_read, "Socket accept failed");
 }
 
 void setup_client()
 {
     sock_write = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_write < 0)
-    {
-        print_log("Error opening socket");
-        exit(1);
-    }
+    check_syscall_err(sock_write, "Socket opening failed");
 
     read_adr.sin_family = AF_INET;
     read_adr.sin_port = htons(next_write_port);
     read_adr.sin_addr.s_addr = inet_addr(SERVERIP);
 
     print_log("Setting up Connection...\n");
-    if (connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)) < 0)
-    {
-        print_log("Error connecting");
-        exit(2);
-    }
+    check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
     sleep(1);
     print_log("Connection Established to Server\n");
 }
