@@ -8,6 +8,7 @@ int str_length(char str[]);
 void set_coordinator_next(char str[]);
 void setup_server();
 void setup_client();
+void append_cur_id();
 
 int id = -1;
 int next_id = -1;
@@ -27,6 +28,9 @@ int self_read_port;
 int next_write_port;
 int should_start_election;
 
+char election_message[BUFFER_LEN] = "E;";
+char coordinator_message[BUFFER_LEN] = "C;";
+
 #define print_log(f_, ...) printf("[%s] PHIL ID: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
 int main(int argc, char *argv[])
@@ -35,19 +39,30 @@ int main(int argc, char *argv[])
     self_read_port = atoi(argv[2]);
     next_write_port = atoi(argv[3]);
     should_start_election = atoi(argv[4]);
-    print_log("SHOULD START ELECTION: %d\n", should_start_election);
+    // print_log("SHOULD START ELECTION: %d\n", should_start_election);
 
-    char str[100] = "C;123;45;6;78;1;";
+    char str[100] = "C;123;45;6;78;1;"; // BUG - need to remove and fix the str name everywhere in code
 
     // setup_server();
     // setup_client();
 
     if (should_start_election)
     {
-        sleep(1);
+        sleep(1); // Wait until readers are ready; might need more than 1 sec
         // Start election
         setup_client();
-        err = write(sock_write, str, sizeof(str));
+
+        // char id_char[100];
+        // sprintf(id_char, "%d", id);
+        // char semicolon_char[100];
+        // sprintf(semicolon_char, "%c", ';');
+
+        // strncat(election_message, id_char, str_length(id_char));
+        // strncat(election_message, semicolon_char, str_length(semicolon_char));
+        append_cur_id();
+        print_log("Appended String to send: %s\n", election_message);
+
+        err = write(sock_write, election_message, sizeof(election_message));
         if (err == -1)
         {
             print_log("Write err\n");
@@ -64,6 +79,9 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
         print_log("FROM CLIENT: %s\n", buffer);
+        sprintf(election_message, "%s", buffer);
+        append_cur_id();
+        print_log("Appended String to send: %s\n", election_message);
     }
     // TODO - need to think of a mechanism of switching from reading to writing mode?
 
@@ -80,12 +98,12 @@ int main(int argc, char *argv[])
     {
         print_log("ELECTION MESSAGE DETECTED\n");
         // here I append current ID and send to next
-        char id_char[100];
-        sprintf(id_char, "%d", id);
+        // char id_char[100];
+        // sprintf(id_char, "%d", id);
 
-        print_log("Original String: %s\n", str);
-        strncat(str, id_char, str_length(id_char));
-        print_log("Appended String: %s\n", str);
+        // print_log("Original String: %s\n", str);
+        // strncat(str, id_char, str_length(id_char));
+        // print_log("Appended String: %s\n", str);
     }
     else
     {
@@ -104,6 +122,17 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+void append_cur_id()
+{
+    char id_char[100];
+    sprintf(id_char, "%d", id);
+    char semicolon_char[100];
+    sprintf(semicolon_char, "%c", ';');
+
+    strncat(election_message, id_char, str_length(id_char));
+    strncat(election_message, semicolon_char, str_length(semicolon_char));
 }
 
 int str_length(char str[])
