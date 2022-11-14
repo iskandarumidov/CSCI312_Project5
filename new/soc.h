@@ -36,6 +36,11 @@ int get_random_in_range(int low, int high);
 #define SEPARATORS "EC;"
 #define PHILOSOPHER_COUNT 5
 
+int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};
+int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200};
+// int read_ports[6] = {31200, 31201};
+// int write_ports[6] = {31201, 31200};
+
 typedef struct sockaddr_in sockaddr_in;
 
 // void setAddr(sockaddr_in *thisAddr, int thisID, int ADDPORT)

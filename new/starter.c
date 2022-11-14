@@ -2,10 +2,10 @@
 #define print_log(f_, ...) printf("[%s] STARTER: ", timestamp()), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro to STARTER
 int main(int argc, char *argv[])
 {
-    // int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};
-    // int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200};
-    int read_ports[6] = {31200, 31201};
-    int write_ports[6] = {31201, 31200};
+    // // int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};
+    // // int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200};
+    // int read_ports[6] = {31200, 31201};
+    // int write_ports[6] = {31201, 31200};
 
     print_log("Running %d processes...\n", PHILOSOPHER_COUNT + 1);
 
@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
     int err;
     time_t t;
 
-    // for (i = 0; i < PHILOSOPHER_COUNT + 1; i++)
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < PHILOSOPHER_COUNT + 1; i++)
+    // for (i = 0; i < 2; i++)
     {
         srand(time(NULL));
         int phil_id = get_random_in_range(1, 1000);
@@ -57,9 +57,9 @@ int main(int argc, char *argv[])
         sleep(1);
     }
 
-    // for (;;)
-    // {
-    // }
+    for (;;)
+    {
+    }
 
     return EXIT_SUCCESS;
 }

@@ -31,6 +31,7 @@ int should_start_election;
 
 char election_message[BUFFER_LEN] = "E;";
 char coordinator_message[BUFFER_LEN] = "C;";
+// char coordinator_message[BUFFER_LEN] = "C;123;45;6;78;1;";
 
 #define print_log(f_, ...) printf("[%s] PHIL ID: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
@@ -40,30 +41,44 @@ int main(int argc, char *argv[])
     self_read_port = atoi(argv[2]);
     next_write_port = atoi(argv[3]);
     should_start_election = atoi(argv[4]);
-    // print_log("SHOULD START ELECTION: %d\n", should_start_election);
-
-    char str[100] = "C;123;45;6;78;1;"; // BUG - need to remove and fix the str name everywhere in code
-
-    // setup_server();
-    // setup_client();
 
     if (should_start_election)
     {
+        // Starting election. Sending out first election message
         sleep(1); // Wait until readers are ready; might need more than 1 sec
-        // Start election
         setup_client();
-
         append_cur_id();
-        print_log("Appended String to send: %s\n", election_message);
-
+        // print_log("Appended String to send: %s\n", election_message);
         err = write(sock_write, election_message, sizeof(election_message));
         check_syscall_err(err, "write error");
-
         close(sock_write);
+
+        // Done sending out first election message, now listen for incoming election message
+        setup_server();
+        err = read(new_sock_read, buffer, sizeof(buffer));
+        check_syscall_err(err, "read error");
+        sprintf(election_message, "%s", buffer);
+        print_log("FROM CLIENT: %s\n", election_message);
+        close(sock_read);
+        close(new_sock_read);
+
+        // Done with election. Now send out Coordinator message
+        sleep(1);
+        setup_client();
+        sprintf(coordinator_message, "%s", election_message);
+        coordinator_message[0] = 'C';
+        err = write(sock_write, coordinator_message, sizeof(coordinator_message));
+        check_syscall_err(err, "write error");
+        close(sock_write);
+
+        // Listen for Coordinator message to come back
         setup_server();
         err = read(new_sock_read, buffer, sizeof(buffer));
         check_syscall_err(err, "read error");
         print_log("FROM CLIENT: %s\n", buffer);
+        sprintf(coordinator_message, "%s", buffer);
+        close(sock_read);
+        close(new_sock_read);
     }
     else
     {
@@ -75,50 +90,55 @@ int main(int argc, char *argv[])
         print_log("FROM CLIENT: %s\n", buffer);
         sprintf(election_message, "%s", buffer);
         append_cur_id();
-        print_log("Appended String to send: %s\n", election_message);
+        // print_log("Appended String to send: %s\n", election_message);
         close(sock_read);
         close(new_sock_read);
+
+        // Done listening. Need to send election message to next
         sleep(1);
         setup_client();
         err = write(sock_write, election_message, sizeof(election_message));
         check_syscall_err(err, "write error");
+        close(sock_write);
+
+        // Done sending election message, now listen for Coordinator message
+        setup_server();
+        err = read(new_sock_read, buffer, sizeof(buffer));
+        check_syscall_err(err, "read error");
+        print_log("FROM CLIENT: %s\n", buffer);
+        sprintf(coordinator_message, "%s", buffer);
+        close(sock_read);
+        close(new_sock_read);
+
+        // Send Coordinator message to next node
+        sleep(1);
+        setup_client();
+        coordinator_message[0] = 'C';
+        err = write(sock_write, coordinator_message, sizeof(coordinator_message));
+        check_syscall_err(err, "write error");
+        close(sock_write);
+
+        // Now that I have full coordinator message, I am done communicating with peers
+
+        // TODO - now think of logic to cut out the coordinator and rearrange the ring
     }
     // TODO - need to think of a mechanism of switching from reading to writing mode?
-
-    // err = read(new_sock_read, buffer, sizeof(buffer));
-    // printf("FROM CLIENT: %s\n", buffer);
 
     close(sock_read);
     close(new_sock_read);
     close(sock_write);
 
-    exit(0); // TODO - need to remove once IO is fixed
+    set_coordinator_next(coordinator_message);
+    print_log("COORDINATOR: %d, NEXT: %d\n", coordinator, next_id);
 
-    if (str[0] == 'E')
-    {
-        print_log("ELECTION MESSAGE DETECTED\n");
-        // here I append current ID and send to next
-        // char id_char[100];
-        // sprintf(id_char, "%d", id);
+    // BUG - important - need to find port from message. Also determine next port from message. Prob delete next philid, jut need port
 
-        // print_log("Original String: %s\n", str);
-        // strncat(str, id_char, str_length(id_char));
-        // print_log("Appended String: %s\n", str);
-    }
-    else
-    {
-        print_log("COORDINATOR MESSAGE DETECTED\n");
-        // here I set coordinator and next
-        set_coordinator_next(str);
-        print_log("COORDINATOR: %d\n", coordinator);
-        print_log("NEXT: %d\n", next_id);
-        // TODO - if coordinator detected, stop listening for other messages
-    }
     // detect if I am the coordinator
     if (coordinator == id)
     {
-        err = execl("./coordinator", "coordinator", (char *)NULL); // TODO - need err check?
-        check_syscall_err(err, "Execl failed");
+        print_log("I AM COORDINATOR\n");
+        // err = execl("./coordinator", "coordinator", (char *)NULL);
+        // check_syscall_err(err, "Execl failed");
     }
 
     return EXIT_SUCCESS;
@@ -152,7 +172,7 @@ int str_length(char str[])
     return count;
 }
 
-void set_coordinator_next(char str[])
+void set_coordinator_next(char str[]) // TODO - strs old, do I even need to detect next PHIL ID? Since I have port?
 {
     int max = id;
     char *token = strtok(str, SEPARATORS);
@@ -184,7 +204,7 @@ void set_coordinator_next(char str[])
 
 void setup_server()
 {
-    print_log("Creating socket\n");
+    // print_log("Creating socket\n");
     sock_read = socket(AF_INET, SOCK_STREAM, 0);
     check_syscall_err(sock_read, "Socket opening failed");
 
@@ -192,10 +212,10 @@ void setup_server()
     serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_adr.sin_port = htons(self_read_port);
 
-    print_log("Binding the Socket\n");
+    // print_log("Binding the Socket\n");
     check_syscall_err(bind(sock_read, (struct sockaddr *)&serv_adr, sizeof(serv_adr)), "Binding to socket failed");
     check_syscall_err(listen(sock_read, MAX_CLIENT_QUEUE), "Listening to socket failed");
-    print_log("New Server created on IP: %s | Port: %d\n", SERVERIP, self_read_port);
+    print_log("Node listening on port: %d\n", self_read_port);
 
     clientLength = sizeof(client_adr);
     new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
@@ -211,8 +231,8 @@ void setup_client()
     read_adr.sin_port = htons(next_write_port);
     read_adr.sin_addr.s_addr = inet_addr(SERVERIP);
 
-    print_log("Setting up Connection...\n");
+    // print_log("Setting up Connection...\n");
     check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
     sleep(1);
-    print_log("Connection Established to Server\n");
+    print_log("Writer created\n");
 }
