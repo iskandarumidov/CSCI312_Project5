@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
             char next_write_port_char[BUFFER_LEN];
             sprintf(next_write_port_char, "%d", write_ports[next]);
             print_log("Exec: Phil ID: %d, Read port: %d, Write port: %d, Next read port: %d, Next write port: %d\n", phil_id, read_ports[i], write_ports[i], read_ports[next], write_ports[next]);
-            err = execl("./exAppend", "exAppend", phil_id_char, read_port_char, write_port_char, next_read_port_char, next_write_port_char, (char *)NULL); // TODO - change program name, err handle
-            // err = execl("./exAppend", "exAppend", phil_id_char, read_port_char, write_port_char, next_read_port_char, next_write_port_char, (char *)NULL); // TODO - change program name, err handle
+            err = execl("./exAppend", "exAppend", phil_id_char, read_port_char, write_port_char, next_read_port_char, next_write_port_char, (char *)NULL);
+            // err = execl("./exAppend", "exAppend", phil_id_char, read_port_char, write_port_char, next_read_port_char, next_write_port_char, (char *)NULL);
             // execl("./exAppend", "exAppend", "PHIL_ID", "SELF_READ_PORT", "SELF_WRITE_PORT", "NEXT_READ_PORT", "NEXT_WRITE_PORT", (char *)NULL);
         }
         sleep(1);

@@ -28,9 +28,8 @@ int get_random_in_range(int low, int high);
 // void setAddr(sockaddr_in *thisAddr, int thisID, int ADDPORT);
 
 #define print_log(f_, ...) printf("[%s] ", timestamp()), printf((f_), ##__VA_ARGS__), printf("")
-#define SERVERPORT 31200
+// #define SERVERPORT 31200 // TODO - should I set a dedicated known port for controller or use old phil port?
 #define SERVERIP "127.0.0.1"
-// #define BUFFLEN 50
 #define NULL 0
 #define MAX_CLIENT_QUEUE 5
 #define BUFFER_LEN 256
@@ -39,13 +38,13 @@ int get_random_in_range(int low, int high);
 
 typedef struct sockaddr_in sockaddr_in;
 
-void setAddr(sockaddr_in *thisAddr, int thisID, int ADDPORT)
-{
-	memset(&(*thisAddr), 0, sizeof(struct sockaddr_in));
-	(*thisAddr).sin_family = AF_INET;
-	(*thisAddr).sin_port = htons(SERVERPORT + thisID + ADDPORT);
-	(*thisAddr).sin_addr.s_addr = inet_addr(SERVERIP);
-}
+// void setAddr(sockaddr_in *thisAddr, int thisID, int ADDPORT)
+// {
+// 	memset(&(*thisAddr), 0, sizeof(struct sockaddr_in));
+// 	(*thisAddr).sin_family = AF_INET;
+// 	(*thisAddr).sin_port = htons(SERVERPORT + thisID + ADDPORT);
+// 	(*thisAddr).sin_addr.s_addr = inet_addr(SERVERIP);
+// }
 
 char *timestamp()
 {

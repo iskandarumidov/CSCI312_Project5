@@ -63,14 +63,25 @@ int main(int argc, char *argv[])
         print_log("Appended String to send: %s\n", election_message);
 
         err = write(sock_write, election_message, sizeof(election_message));
-        if (err == -1)
+        if (err == -1) // TODO - put syscall err check in separate function
         {
             print_log("Write err\n");
             exit(EXIT_FAILURE);
         }
+
+        close(sock_write);
+        setup_server();
+        err = read(new_sock_read, buffer, sizeof(buffer));
+        if (err == -1)
+        {
+            print_log("Read err\n");
+            exit(EXIT_FAILURE);
+        }
+        print_log("FROM CLIENT: %s\n", buffer);
     }
     else
     {
+        // I am not to start election. Listen for incoming requests with election message
         setup_server();
         err = read(new_sock_read, buffer, sizeof(buffer));
         if (err == -1)
@@ -82,6 +93,16 @@ int main(int argc, char *argv[])
         sprintf(election_message, "%s", buffer);
         append_cur_id();
         print_log("Appended String to send: %s\n", election_message);
+        close(sock_read);
+        close(new_sock_read);
+        sleep(1);
+        setup_client();
+        err = write(sock_write, election_message, sizeof(election_message));
+        if (err == -1)
+        {
+            print_log("Write err\n");
+            exit(EXIT_FAILURE);
+        }
     }
     // TODO - need to think of a mechanism of switching from reading to writing mode?
 
@@ -182,8 +203,6 @@ void setup_server()
         print_log("Socket opening failed\n");
         exit(EXIT_FAILURE);
     }
-    bzero((char *)&serv_adr, sizeof(serv_adr));
-    memset(&serv_adr, 0, sizeof(struct sockaddr_in));
 
     serv_adr.sin_family = AF_INET;
     serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -222,9 +241,6 @@ void setup_client()
         exit(1);
     }
 
-    bzero((char *)&read_adr, sizeof(read_adr));
-    memset(&read_adr, 0, sizeof(struct sockaddr_in));
-
     read_adr.sin_family = AF_INET;
     read_adr.sin_port = htons(next_write_port);
     read_adr.sin_addr.s_addr = inet_addr(SERVERIP);
@@ -237,6 +253,4 @@ void setup_client()
     }
     sleep(1);
     print_log("Connection Established to Server\n");
-
-    // bzero(buffer, sizeof(buffer));
 }
