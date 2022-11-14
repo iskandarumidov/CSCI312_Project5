@@ -34,7 +34,7 @@ int get_random_in_range(int low, int high);
 #define MAX_CLIENT_QUEUE 5
 #define BUFFER_LEN 256
 #define SEPARATORS "EC;"
-#define PHILOSOPHER_COUNT 5
+#define PHILOSOPHER_COUNT 6
 
 int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};
 int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200};
@@ -59,10 +59,19 @@ char *timestamp()
 	return time_arr;
 }
 
+// int get_random_in_range(int low, int high)
+// {
+// 	srand(time(NULL));
+// 	return (rand() % (high - low + 1)) + low;
+// }
+
+int not_random = 0;
+// BUG - not so random!
 int get_random_in_range(int low, int high)
 {
-	srand(time(NULL));
-	return (rand() % (high - low + 1)) + low;
+	return not_random++;
+	// srand(time(NULL));
+	// return (rand() % (high - low + 1)) + low;
 }
 
 #endif

@@ -12,7 +12,7 @@ void append_cur_id();
 void check_syscall_err(int syscall_err, char *syscall_err_msg);
 
 int id = -1;
-int next_id = -1;
+// int next_id = -1;
 int coordinator = -1;
 
 int sock_read;
@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
         sprintf(coordinator_message, "%s", buffer);
         close(sock_read);
         close(new_sock_read);
+        print_log("DONE WITH ELECTION STARTER\n");
     }
     else
     {
@@ -117,6 +118,7 @@ int main(int argc, char *argv[])
         err = write(sock_write, coordinator_message, sizeof(coordinator_message));
         check_syscall_err(err, "write error");
         close(sock_write);
+        print_log("DONE WITH NOT ELECTION STARTER\n");
 
         // Now that I have full coordinator message, I am done communicating with peers
 
@@ -124,12 +126,12 @@ int main(int argc, char *argv[])
     }
     // TODO - need to think of a mechanism of switching from reading to writing mode?
 
-    close(sock_read);
-    close(new_sock_read);
-    close(sock_write);
+    // close(sock_read);
+    // close(new_sock_read);
+    // close(sock_write);
 
     set_coordinator_next(coordinator_message);
-    print_log("COORDINATOR: %d, NEXT: %d\n", coordinator, next_id);
+    print_log("COORDINATOR: %d, NEXT PORT: %d\n", coordinator, next_write_port);
 
     // BUG - important - need to find port from message. Also determine next port from message. Prob delete next philid, jut need port
 
@@ -174,37 +176,61 @@ int str_length(char str[])
 
 void set_coordinator_next(char str[]) // TODO - strs old, do I even need to detect next PHIL ID? Since I have port?
 {
+    print_log("========INSIDE SET COORD\n");
     int max = id;
     char *token = strtok(str, SEPARATORS);
     int id_ints[PHILOSOPHER_COUNT];
     int i = 0;
+    int my_index = -1;
+    int coordinator_index = -1;
     while (token != NULL)
     {
         int token_int = atoi(token);
         id_ints[i] = token_int;
+        if (token_int == id) // found myself
+        {
+            my_index = i;
+        }
         if (token_int > max)
         {
             max = token_int;
+            coordinator_index = i;
         }
         token = strtok(NULL, SEPARATORS);
         i++;
     }
-
-    for (i = 0; i < PHILOSOPHER_COUNT; ++i)
+    print_log("========DONE WITH WHILE. MAX: %d, COORD_INDEX: %d, MY_INDEX: %d\n", max, coordinator_index, my_index);
+    // BUG - here to determine if next port is to be changed
+    if (my_index + 1 == coordinator_index && coordinator_index == PHILOSOPHER_COUNT - 1) // BUG - PHILOSOPHER_COUNT - off-by-one errors!
     {
-        if (id_ints[i] == id)
-        {
-            next_id = ((i == PHILOSOPHER_COUNT - 1) ? id_ints[0] : id_ints[i + 1]);
-            break;
-        }
+        print_log("========FIRST_IF, %d\n", read_ports[0]);
+        next_write_port = read_ports[0];
     }
+    else if (my_index == PHILOSOPHER_COUNT - 1 && coordinator_index == 0)
+    {
+        print_log("========SECOND_IF, %d\n", read_ports[1]);
+        next_write_port = read_ports[1];
+    }
+    else if (my_index + 1 == coordinator_index)
+    {
+        print_log("========THIRD_IF, %d\n", read_ports[my_index + 2]);
+        next_write_port = read_ports[my_index + 2];
+    }
+
+    // for (i = 0; i < PHILOSOPHER_COUNT; ++i)
+    // {
+    //     if (id_ints[i] == id)
+    //     {
+    //         next_id = ((i == PHILOSOPHER_COUNT - 1) ? id_ints[0] : id_ints[i + 1]);
+    //         break;
+    //     }
+    // }
 
     coordinator = max;
 }
 
 void setup_server()
 {
-    // print_log("Creating socket\n");
     sock_read = socket(AF_INET, SOCK_STREAM, 0);
     check_syscall_err(sock_read, "Socket opening failed");
 
@@ -212,7 +238,6 @@ void setup_server()
     serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_adr.sin_port = htons(self_read_port);
 
-    // print_log("Binding the Socket\n");
     check_syscall_err(bind(sock_read, (struct sockaddr *)&serv_adr, sizeof(serv_adr)), "Binding to socket failed");
     check_syscall_err(listen(sock_read, MAX_CLIENT_QUEUE), "Listening to socket failed");
     print_log("Node listening on port: %d\n", self_read_port);
@@ -231,7 +256,6 @@ void setup_client()
     read_adr.sin_port = htons(next_write_port);
     read_adr.sin_addr.s_addr = inet_addr(SERVERIP);
 
-    // print_log("Setting up Connection...\n");
     check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
     sleep(1);
     print_log("Writer created\n");
