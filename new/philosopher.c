@@ -9,7 +9,7 @@ void set_coordinator_next(char str[]);
 void setup_server();
 void setup_client();
 
-int id = 123;
+int id = -1;
 int next_id = -1;
 int coordinator = -1;
 
@@ -27,13 +27,15 @@ int self_read_port;
 int next_write_port;
 int should_start_election;
 
+#define print_log(f_, ...) printf("[%s] PHIL ID: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
+
 int main(int argc, char *argv[])
 {
     id = atoi(argv[1]);
     self_read_port = atoi(argv[2]);
     next_write_port = atoi(argv[3]);
     should_start_election = atoi(argv[4]);
-    printf("SHOULD START ELECTION: %d\n", should_start_election);
+    print_log("SHOULD START ELECTION: %d\n", should_start_election);
 
     char str[100] = "C;123;45;6;78;1;";
 
@@ -48,20 +50,20 @@ int main(int argc, char *argv[])
         err = write(sock_write, str, sizeof(str));
         if (err == -1)
         {
-            print_log("WRITE ERR\n");
+            print_log("Write err\n");
             exit(EXIT_FAILURE);
         }
     }
-    if (!should_start_election)
+    else
     {
         setup_server();
         err = read(new_sock_read, buffer, sizeof(buffer));
         if (err == -1)
         {
-            print_log("READ ERR\n");
+            print_log("Read err\n");
             exit(EXIT_FAILURE);
         }
-        printf("FROM CLIENT: %s\n", buffer);
+        print_log("FROM CLIENT: %s\n", buffer);
     }
     // TODO - need to think of a mechanism of switching from reading to writing mode?
 
@@ -76,25 +78,24 @@ int main(int argc, char *argv[])
 
     if (str[0] == 'E')
     {
-        printf("ELECTION MESSAGE DETECTED\n");
+        print_log("ELECTION MESSAGE DETECTED\n");
         // here I append current ID and send to next
         char id_char[100];
         sprintf(id_char, "%d", id);
 
-        printf("Original String: %s\n", str);
+        print_log("Original String: %s\n", str);
         strncat(str, id_char, str_length(id_char));
-        printf("Appended String: %s\n", str);
+        print_log("Appended String: %s\n", str);
     }
     else
     {
-        printf("COORDINATOR MESSAGE DETECTED\n");
+        print_log("COORDINATOR MESSAGE DETECTED\n");
         // here I set coordinator and next
         set_coordinator_next(str);
-        printf("COORDINATOR: %d\n", coordinator);
-        printf("NEXT: %d\n", next_id);
+        print_log("COORDINATOR: %d\n", coordinator);
+        print_log("NEXT: %d\n", next_id);
         // TODO - if coordinator detected, stop listening for other messages
     }
-    printf("RAND: %d\n", get_random_in_range(0, 10)); // TODO - needs to move to launcher
     // detect if I am the coordinator
     if (coordinator == id)
     {
@@ -116,7 +117,7 @@ int str_length(char str[])
 void set_coordinator_next(char str[])
 {
     int max = id;
-    char *token = strtok(str, SEPS);
+    char *token = strtok(str, SEPARATORS);
     int id_ints[PHILOSOPHER_COUNT];
     int i = 0;
     while (token != NULL)
@@ -127,7 +128,7 @@ void set_coordinator_next(char str[])
         {
             max = token_int;
         }
-        token = strtok(NULL, SEPS);
+        token = strtok(NULL, SEPARATORS);
         i++;
     }
 
@@ -145,11 +146,11 @@ void set_coordinator_next(char str[])
 
 void setup_server()
 {
-    printf("SERVERC: Creating socket\n");
+    print_log("Creating socket\n");
     sock_read = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_read < 0)
     {
-        printf("SERVERC: Socket opening failed\n");
+        print_log("Socket opening failed\n");
         exit(EXIT_FAILURE);
     }
     bzero((char *)&serv_adr, sizeof(serv_adr));
@@ -159,26 +160,26 @@ void setup_server()
     serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_adr.sin_port = htons(self_read_port);
 
-    printf("SERVERC: Binding the Socket\n");
+    print_log("Binding the Socket\n");
 
     if (bind(sock_read, (struct sockaddr *)&serv_adr, sizeof(serv_adr)) < 0)
     {
-        printf("SERVERC: Binding to socket failed\n");
+        print_log("Binding to socket failed\n");
         exit(EXIT_FAILURE);
     }
 
     if (listen(sock_read, MAX_CLIENT_QUEUE) == -1)
     {
-        printf("SERVERC: Binding to socket failed\n");
+        print_log("Binding to socket failed\n");
         exit(EXIT_FAILURE);
     }
-    printf("SERVERC: New Server created on IP: %s | Port: %d\n", SERVERIP, self_read_port);
+    print_log("New Server created on IP: %s | Port: %d\n", SERVERIP, self_read_port);
 
     clientLength = sizeof(client_adr);
     new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
     if (new_sock_read < 0)
     {
-        printf("SERVERC: Socket accept failed\n");
+        print_log("Socket accept failed\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -188,7 +189,7 @@ void setup_client()
     sock_write = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_write < 0)
     {
-        print_log("ERROR: Error opening the socket.");
+        print_log("Error opening socket");
         exit(1);
     }
 
@@ -202,7 +203,7 @@ void setup_client()
     print_log("Setting up Connection...\n");
     if (connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)) < 0)
     {
-        print_log("ERROR connecting");
+        print_log("Error connecting");
         exit(2);
     }
     sleep(1);

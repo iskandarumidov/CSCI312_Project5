@@ -30,11 +30,11 @@ int get_random_in_range(int low, int high);
 #define print_log(f_, ...) printf("[%s] ", timestamp()), printf((f_), ##__VA_ARGS__), printf("")
 #define SERVERPORT 31200
 #define SERVERIP "127.0.0.1"
-#define BUFFLEN 50
+// #define BUFFLEN 50
 #define NULL 0
 #define MAX_CLIENT_QUEUE 5
 #define BUFFER_LEN 256
-#define SEPS "EC;"
+#define SEPARATORS "EC;"
 #define PHILOSOPHER_COUNT 5
 
 typedef struct sockaddr_in sockaddr_in;
@@ -62,5 +62,3 @@ int get_random_in_range(int low, int high)
 }
 
 #endif
-
-// cc -Wno-macro-redefined client.c -o sender

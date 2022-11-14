@@ -1,5 +1,5 @@
 #include "soc.h"
-
+#define print_log(f_, ...) printf("[%s] STARTER: ", timestamp()), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro to STARTER
 int main(int argc, char *argv[])
 {
     // int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};
@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
         pid = fork();
         if (pid < 0)
         {
-            perror("Starter: Fork failed");
+            print_log("Fork failed\n");
             exit(EXIT_FAILURE);
         }
         else if (pid == 0)
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
             sprintf(should_start_election_char, "%d", 1);
             char should_not_start_election_char[BUFFER_LEN];
             sprintf(should_not_start_election_char, "%d", 0);
-            print_log("Exec: Phil ID: %d, Self read port: %d, Next write port: %d\n", phil_id, read_ports[i], write_ports[i]);
+            print_log("Exec phil ID: %d, Self read port: %d, Next write port: %d\n", phil_id, read_ports[i], write_ports[i]);
             if (i == 0) // This one should start election
             {
                 err = execl("./philosopher", "philosopher", phil_id_char, self_read_port_char, next_write_port_char, should_start_election_char, (char *)NULL);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
             if (err == -1)
             {
-                print_log("Starter: execl failed\n");
+                print_log("Execl failed\n");
                 exit(EXIT_FAILURE);
             }
         }
