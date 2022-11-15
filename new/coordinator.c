@@ -24,15 +24,24 @@ int main(int argc, char *argv[])
     id = atoi(argv[1]);
     self_read_port = atoi(argv[2]);
 
-    print_log("NOW I AM COORDINATOR!\n");
+    print_log("INSIDE COORDINATOR!\n");
     // dequeue();
-    // setup_server();
-    // err = read(new_sock_read, buffer, sizeof(buffer));
-    // check_syscall_err(err, "read coord error");
-    // sprintf(incoming_msg, "%s", buffer);
-    // print_log("FROM CLIENT: %s\n", incoming_msg);
-    // close(sock_read);
-    // close(new_sock_read);
+    setup_server();
+    int i;
+    for (i = 0; i < 5; i++)
+    {
+        clientLength = sizeof(client_adr);
+        new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
+        check_syscall_err(new_sock_read, "Socket accept failed");
+
+        err = read(new_sock_read, buffer, sizeof(buffer));
+        check_syscall_err(err, "read coord error");
+        sprintf(incoming_msg, "%s", buffer);
+        print_log("FROM CLIENT: %s\n", incoming_msg);
+    }
+
+    close(sock_read);
+    close(new_sock_read);
 
     // incoming_msg
 
@@ -52,9 +61,9 @@ void setup_server()
     check_syscall_err(listen(sock_read, MAX_CLIENT_QUEUE), "Listening to socket failed");
     print_log("Node listening on port: %d\n", self_read_port);
 
-    clientLength = sizeof(client_adr);
-    new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
-    check_syscall_err(new_sock_read, "Socket accept failed");
+    // clientLength = sizeof(client_adr);
+    // new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
+    // check_syscall_err(new_sock_read, "Socket accept failed");
 }
 
 void setup_client(int remote_port_to_write)

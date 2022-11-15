@@ -4,6 +4,7 @@ void set_coordinator_next(char str[]);
 void setup_server();
 void setup_client();
 // void setup_client(int port);
+void setup_client_with_port(int port);
 void append_cur_id();
 
 int id = -1;
@@ -109,7 +110,7 @@ int main(int argc, char *argv[])
         // Send Coordinator message to next node
         sleep(1);
         setup_client();
-        coordinator_message[0] = 'C';
+        coordinator_message[0] = 'C'; // BUG - so somewhere here . P0 gets only letter C from P5
         err = write(sock_write, coordinator_message, sizeof(coordinator_message));
         check_syscall_err(err, "write error");
         close(sock_write);
@@ -141,14 +142,16 @@ int main(int argc, char *argv[])
     // Need to replace next port by coordinator's port?
 
     // Send request to coordinator
-    // sleep(1);
-    // setup_client(coordinator_port);
-    // char test_to_send[BUFFER_LEN];
-    // sprintf(test_to_send, "%d", 1);
-    // err = write(sock_write, test_to_send, sizeof(test_to_send));
-    // check_syscall_err(err, "write error after coord decided");
-    // close(sock_write);
+    sleep(10);
+    setup_client_with_port(coordinator_port);
+    char test_to_send[BUFFER_LEN];
+    sprintf(test_to_send, "%d", 1);
+    err = write(sock_write, test_to_send, sizeof(test_to_send));
+    check_syscall_err(err, "write error after coord decided");
+    close(sock_write);
     // print_log("DONE WITH NOT ELECTION STARTER\n");
+
+    // TODO - might need to use threads like Hamnes said - on thread listens for messages
 
     return EXIT_SUCCESS;
 }
@@ -244,16 +247,16 @@ void setup_client()
 }
 
 // TODO - delete the other version and refactor all?
-// void setup_client(int port)
-// {
-//     sock_write = socket(AF_INET, SOCK_STREAM, 0);
-//     check_syscall_err(sock_write, "Socket opening failed");
+void setup_client_with_port(int port)
+{
+    sock_write = socket(AF_INET, SOCK_STREAM, 0);
+    check_syscall_err(sock_write, "Socket opening failed");
 
-//     read_adr.sin_family = AF_INET;
-//     read_adr.sin_port = htons(port);
-//     read_adr.sin_addr.s_addr = inet_addr(SERVERIP);
+    read_adr.sin_family = AF_INET;
+    read_adr.sin_port = htons(port);
+    read_adr.sin_addr.s_addr = inet_addr(SERVERIP);
 
-//     check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
-//     sleep(1);
-//     // print_log("Writer created\n");
-// }
+    check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
+    sleep(1);
+    // print_log("Writer created\n");
+}
