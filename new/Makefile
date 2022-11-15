@@ -3,6 +3,7 @@ all: kp clean current
 current:
 	cc -Wno-macro-redefined starter.c -o starter
 	cc -Wno-macro-redefined philosopher.c -o philosopher
+	cc -Wno-macro-redefined coordinator.c -o coordinator
 
 kp:
 	-kill $$(lsof -t -i :31200 -s TCP:LISTEN)
@@ -15,3 +16,4 @@ kp:
 clean:
 	rm -f ./starter
 	rm -f ./philosopher
+	rm -f ./coordinator

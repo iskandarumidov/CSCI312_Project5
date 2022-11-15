@@ -25,7 +25,8 @@
 
 char *timestamp();
 int get_random_in_range(int low, int high);
-// void setAddr(sockaddr_in *thisAddr, int thisID, int ADDPORT);
+int str_length(char str[]);
+void check_syscall_err(int syscall_err, char *syscall_err_msg);
 
 #define print_log(f_, ...) printf("[%s] ", timestamp()), printf((f_), ##__VA_ARGS__), printf("")
 // #define SERVERPORT 31200 // TODO - should I set a dedicated known port for controller or use old phil port?
@@ -42,14 +43,6 @@ int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200}; // PHIL writes 
 // int write_ports[6] = {31201, 31200};
 
 typedef struct sockaddr_in sockaddr_in;
-
-// void setAddr(sockaddr_in *thisAddr, int thisID, int ADDPORT)
-// {
-// 	memset(&(*thisAddr), 0, sizeof(struct sockaddr_in));
-// 	(*thisAddr).sin_family = AF_INET;
-// 	(*thisAddr).sin_port = htons(SERVERPORT + thisID + ADDPORT);
-// 	(*thisAddr).sin_addr.s_addr = inet_addr(SERVERIP);
-// }
 
 char *timestamp()
 {
@@ -71,6 +64,23 @@ int not_random = 0;
 int get_random_in_range(int low, int high)
 {
 	return not_random++;
+}
+
+int str_length(char str[])
+{
+	int count;
+	for (count = 0; str[count] != '\0'; ++count)
+		;
+	return count;
+}
+
+void check_syscall_err(int syscall_err, char *syscall_err_msg)
+{
+	if (syscall_err == -1)
+	{
+		print_log("Error - %s\n", syscall_err_msg);
+		exit(EXIT_FAILURE);
+	}
 }
 
 #endif

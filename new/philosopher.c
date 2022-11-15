@@ -1,18 +1,17 @@
 #include "soc.h"
 
-int str_length(char str[]);
 void set_coordinator_next(char str[]);
 void setup_server();
 void setup_client();
+// void setup_client(int port);
 void append_cur_id();
-void check_syscall_err(int syscall_err, char *syscall_err_msg);
 
 int id = -1;
 int coordinator = -1;
 
 int sock_read;
 int new_sock_read;
-int pid;
+// int pid;
 int sock_write;
 char buffer[BUFFER_LEN];
 socklen_t clientLength;
@@ -22,6 +21,7 @@ int err;
 
 int self_read_port;
 int next_write_port;
+int coordinator_port;
 int should_start_election;
 
 char election_message[BUFFER_LEN] = "E;";
@@ -113,16 +113,12 @@ int main(int argc, char *argv[])
         err = write(sock_write, coordinator_message, sizeof(coordinator_message));
         check_syscall_err(err, "write error");
         close(sock_write);
-        print_log("DONE WITH NOT ELECTION STARTER\n");
+        // print_log("DONE WITH NOT ELECTION STARTER\n");
 
         // Now that I have full coordinator message, I am done communicating with peers
 
         // TODO - now think of logic to cut out the coordinator and rearrange the ring
     }
-
-    // close(sock_read);
-    // close(new_sock_read);
-    // close(sock_write);
 
     set_coordinator_next(coordinator_message);
     print_log("COORDINATOR: %d, NEXT PORT: %d\n", coordinator, next_write_port);
@@ -133,23 +129,28 @@ int main(int argc, char *argv[])
     if (coordinator == id)
     {
         print_log("I AM COORDINATOR\n");
-        // err = execl("./coordinator", "coordinator", (char *)NULL);
-        // check_syscall_err(err, "Execl failed");
+        char phil_id_char[BUFFER_LEN];
+        sprintf(phil_id_char, "%d", id);
+        char self_read_port_char[BUFFER_LEN];
+        sprintf(self_read_port_char, "%d", self_read_port);
+        err = execl("./coordinator", "coordinator", phil_id_char, self_read_port_char, (char *)NULL);
+        check_syscall_err(err, "Execl coordinator failed");
     }
 
     // If I'm here, it means I'm not the coordinator
     // Need to replace next port by coordinator's port?
 
-    return EXIT_SUCCESS;
-}
+    // Send request to coordinator
+    // sleep(1);
+    // setup_client(coordinator_port);
+    // char test_to_send[BUFFER_LEN];
+    // sprintf(test_to_send, "%d", 1);
+    // err = write(sock_write, test_to_send, sizeof(test_to_send));
+    // check_syscall_err(err, "write error after coord decided");
+    // close(sock_write);
+    // print_log("DONE WITH NOT ELECTION STARTER\n");
 
-void check_syscall_err(int syscall_err, char *syscall_err_msg)
-{
-    if (syscall_err == -1)
-    {
-        print_log("Error - %s\n", syscall_err_msg);
-        exit(EXIT_FAILURE);
-    }
+    return EXIT_SUCCESS;
 }
 
 void append_cur_id()
@@ -161,14 +162,6 @@ void append_cur_id()
 
     strncat(election_message, id_char, str_length(id_char));
     strncat(election_message, semicolon_char, str_length(semicolon_char));
-}
-
-int str_length(char str[])
-{
-    int count;
-    for (count = 0; str[count] != '\0'; ++count)
-        ;
-    return count;
 }
 
 void set_coordinator_next(char str[]) // TODO - strs old, do I even need to detect next PHIL ID? Since I have port?
@@ -215,6 +208,7 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
     }
 
     coordinator = max;
+    coordinator_port = read_ports[coordinator_index];
 }
 
 void setup_server()
@@ -228,7 +222,7 @@ void setup_server()
 
     check_syscall_err(bind(sock_read, (struct sockaddr *)&serv_adr, sizeof(serv_adr)), "Binding to socket failed");
     check_syscall_err(listen(sock_read, MAX_CLIENT_QUEUE), "Listening to socket failed");
-    print_log("Node listening on port: %d\n", self_read_port);
+    // print_log("Node listening on port: %d\n", self_read_port);
 
     clientLength = sizeof(client_adr);
     new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
@@ -248,3 +242,18 @@ void setup_client()
     sleep(1);
     print_log("Writer created\n");
 }
+
+// TODO - delete the other version and refactor all?
+// void setup_client(int port)
+// {
+//     sock_write = socket(AF_INET, SOCK_STREAM, 0);
+//     check_syscall_err(sock_write, "Socket opening failed");
+
+//     read_adr.sin_family = AF_INET;
+//     read_adr.sin_port = htons(port);
+//     read_adr.sin_addr.s_addr = inet_addr(SERVERIP);
+
+//     check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
+//     sleep(1);
+//     // print_log("Writer created\n");
+// }

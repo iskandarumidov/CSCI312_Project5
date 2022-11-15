@@ -1,7 +1,7 @@
 // #include <stdio.h>
 // #include <stdlib.h>
 
-#define QUEUE_SIZE 100
+#define QUEUE_SIZE 10
 
 void enqueue(int insert_item);
 void dequeue();
