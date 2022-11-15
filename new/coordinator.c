@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     // dequeue();
     setup_server();
     int i;
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 10; i++)
     {
         clientLength = sizeof(client_adr);
         new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);

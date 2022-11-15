@@ -52,19 +52,19 @@ char *timestamp()
 	return time_arr;
 }
 
-// int get_random_in_range(int low, int high)
-// {
-// 	srand(time(NULL));
-// 	return (rand() % (high - low + 1)) + low;
-// }
-
-int not_random = 0;
-// int not_random = 5;
-// BUG - not so random!
 int get_random_in_range(int low, int high)
 {
-	return not_random++;
+	srand(time(NULL));
+	return (rand() % (high - low + 1)) + low;
 }
+
+// int not_random = 0;
+// int not_random = 5;
+// BUG - not so random!
+// int get_random_in_range(int low, int high)
+// {
+// 	return not_random++;
+// }
 
 int str_length(char str[])
 {

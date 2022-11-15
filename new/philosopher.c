@@ -1,5 +1,5 @@
 #include "soc.h"
-
+// TODO - try changing printf in print_log to fprintf(err) for low latency? no buffering?
 void set_coordinator_next(char str[]);
 void setup_server();
 void setup_client();
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         sprintf(coordinator_message, "%s", buffer);
         close(sock_read);
         close(new_sock_read);
-        print_log("DONE WITH ELECTION STARTER\n");
+        // print_log("DONE WITH ELECTION STARTER\n");
     }
     else
     {
@@ -122,14 +122,14 @@ int main(int argc, char *argv[])
     }
 
     set_coordinator_next(coordinator_message);
-    print_log("COORDINATOR: %d, NEXT PORT: %d\n", coordinator, next_write_port);
+    // print_log("COORDINATOR: %d, NEXT PORT: %d\n", coordinator, next_write_port);
 
     // BUG - important - need to find port from message
 
     // detect if I am the coordinator
     if (coordinator == id)
     {
-        print_log("I AM COORDINATOR\n");
+        // print_log("I AM COORDINATOR\n");
         char phil_id_char[BUFFER_LEN];
         sprintf(phil_id_char, "%d", id);
         char self_read_port_char[BUFFER_LEN];
@@ -169,7 +169,7 @@ void append_cur_id()
 
 void set_coordinator_next(char str[]) // TODO - strs old, do I even need to detect next PHIL ID? Since I have port?
 {
-    print_log("========INSIDE SET COORD\n");
+    // print_log("========INSIDE SET COORD\n");
     int max = id;
     char *token = strtok(str, SEPARATORS);
     int id_ints[PHILOSOPHER_COUNT];
@@ -192,21 +192,21 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
         token = strtok(NULL, SEPARATORS);
         i++;
     }
-    print_log("========DONE WITH WHILE. MAX: %d, COORD_INDEX: %d, MY_INDEX: %d\n", max, coordinator_index, my_index);
+    // print_log("========DONE WITH WHILE. MAX: %d, COORD_INDEX: %d, MY_INDEX: %d\n", max, coordinator_index, my_index);
     // BUG - here to determine if next port is to be changed. ALSO - need to include if self is coordinator?
     if (my_index + 1 == coordinator_index && coordinator_index == PHILOSOPHER_COUNT - 1) // BUG - PHILOSOPHER_COUNT - off-by-one errors!
     {
-        print_log("========FIRST_IF, %d\n", read_ports[0]);
+        // print_log("========FIRST_IF, %d\n", read_ports[0]);
         next_write_port = read_ports[0];
     }
     else if (my_index == PHILOSOPHER_COUNT - 1 && coordinator_index == 0)
     {
-        print_log("========SECOND_IF, %d\n", read_ports[1]);
+        // print_log("========SECOND_IF, %d\n", read_ports[1]);
         next_write_port = read_ports[1];
     }
     else if (my_index + 1 == coordinator_index)
     {
-        print_log("========THIRD_IF, %d\n", read_ports[my_index + 2]);
+        // print_log("========THIRD_IF, %d\n", read_ports[my_index + 2]);
         next_write_port = read_ports[my_index + 2];
     }
 
@@ -243,7 +243,7 @@ void setup_client()
 
     check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
     sleep(1);
-    print_log("Writer created\n");
+    // print_log("Writer created\n");
 }
 
 // TODO - delete the other version and refactor all?
