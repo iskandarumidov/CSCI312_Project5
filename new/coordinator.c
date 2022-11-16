@@ -13,7 +13,7 @@ struct sockaddr_in serv_adr, client_adr;
 struct sockaddr_in read_adr;
 int err;
 int chopsticks[6] = {-1, 1, 2, 3, 4, 5}; // TODO - change to only 0s and 1s? 0-based?
-char incoming_msg[BUFFER_LEN];           // TODO - need to define left and right chopsticks at each philosopher???? What about coord? Should prob decide who gets what chopstick after coord was decided, acc to C_MSG?
+char incoming_msg[BUFFER_LEN];
 
 #define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 void setup_server();

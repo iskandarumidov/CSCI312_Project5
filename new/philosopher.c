@@ -6,13 +6,13 @@ void setup_client();
 // void setup_client(int port);
 void setup_client_with_port(int port);
 void append_cur_id();
+void setup_chopsticks();
 
 int id = -1;
 int coordinator = -1;
 
 int sock_read;
 int new_sock_read;
-// int pid;
 int sock_write;
 char buffer[BUFFER_LEN];
 socklen_t clientLength;
@@ -24,6 +24,11 @@ int self_read_port;
 int next_write_port;
 int coordinator_port;
 int should_start_election;
+
+int my_index = -1;
+int coordinator_index = -1;
+int left_chopstick = -1;
+int right_chopstick = -1;
 
 char election_message[BUFFER_LEN] = "E;";
 char coordinator_message[BUFFER_LEN] = "C;";
@@ -140,6 +145,10 @@ int main(int argc, char *argv[])
 
     // If I'm here, it means I'm not the coordinator
     // Need to replace next port by coordinator's port?
+    setup_chopsticks();
+    print_log("MY CHOPSTICKS: left - %d, right - %d\n", left_chopstick, right_chopstick);
+
+    // TODO - implement algorithm of getting one chopstick at a time. Log attempts to get chopstick and successes
 
     // Send request to coordinator
     sleep(10);
@@ -167,6 +176,179 @@ void append_cur_id()
     strncat(election_message, semicolon_char, str_length(semicolon_char));
 }
 
+void setup_chopsticks()
+{
+    // int cur_chopstick = 1;
+    if (coordinator_index == 0)
+    {
+        if (my_index == 1)
+        {
+            left_chopstick = 1;
+            right_chopstick = 2;
+        }
+        else if (my_index == 2)
+        {
+            left_chopstick = 2;
+            right_chopstick = 3;
+        }
+        else if (my_index == 3)
+        {
+            left_chopstick = 3;
+            right_chopstick = 4;
+        }
+        else if (my_index == 4)
+        {
+            left_chopstick = 4;
+            right_chopstick = 5;
+        }
+        else if (my_index == 5)
+        {
+            left_chopstick = 1; // BUG - maybe should be reversed? Also in others?
+            right_chopstick = 5;
+        }
+    }
+    else if (coordinator_index == 1)
+    {
+        if (my_index == 0)
+        {
+            left_chopstick = 1;
+            right_chopstick = 2;
+        }
+        else if (my_index == 2)
+        {
+            left_chopstick = 2;
+            right_chopstick = 3;
+        }
+        else if (my_index == 3)
+        {
+            left_chopstick = 3;
+            right_chopstick = 4;
+        }
+        else if (my_index == 4)
+        {
+            left_chopstick = 4;
+            right_chopstick = 5;
+        }
+        else if (my_index == 5)
+        {
+            left_chopstick = 1;
+            right_chopstick = 5;
+        }
+    }
+    else if (coordinator_index == 2)
+    {
+        if (my_index == 0)
+        {
+            left_chopstick = 1;
+            right_chopstick = 2;
+        }
+        else if (my_index == 1)
+        {
+            left_chopstick = 2;
+            right_chopstick = 3;
+        }
+        else if (my_index == 3)
+        {
+            left_chopstick = 3;
+            right_chopstick = 4;
+        }
+        else if (my_index == 4)
+        {
+            left_chopstick = 4;
+            right_chopstick = 5;
+        }
+        else if (my_index == 5)
+        {
+            left_chopstick = 1;
+            right_chopstick = 5;
+        }
+    }
+    else if (coordinator_index == 3)
+    {
+        if (my_index == 0)
+        {
+            left_chopstick = 1;
+            right_chopstick = 2;
+        }
+        else if (my_index == 1)
+        {
+            left_chopstick = 2;
+            right_chopstick = 3;
+        }
+        else if (my_index == 2)
+        {
+            left_chopstick = 3;
+            right_chopstick = 4;
+        }
+        else if (my_index == 4)
+        {
+            left_chopstick = 4;
+            right_chopstick = 5;
+        }
+        else if (my_index == 5)
+        {
+            left_chopstick = 1;
+            right_chopstick = 5;
+        }
+    }
+    else if (coordinator_index == 4)
+    {
+        if (my_index == 0)
+        {
+            left_chopstick = 1;
+            right_chopstick = 2;
+        }
+        else if (my_index == 1)
+        {
+            left_chopstick = 2;
+            right_chopstick = 3;
+        }
+        else if (my_index == 2)
+        {
+            left_chopstick = 3;
+            right_chopstick = 4;
+        }
+        else if (my_index == 3)
+        {
+            left_chopstick = 4;
+            right_chopstick = 5;
+        }
+        else if (my_index == 5)
+        {
+            left_chopstick = 1;
+            right_chopstick = 5;
+        }
+    }
+    else if (coordinator_index == 5)
+    {
+        if (my_index == 0)
+        {
+            left_chopstick = 1;
+            right_chopstick = 2;
+        }
+        else if (my_index == 1)
+        {
+            left_chopstick = 2;
+            right_chopstick = 3;
+        }
+        else if (my_index == 2)
+        {
+            left_chopstick = 3;
+            right_chopstick = 4;
+        }
+        else if (my_index == 3)
+        {
+            left_chopstick = 4;
+            right_chopstick = 5;
+        }
+        else if (my_index == 4)
+        {
+            left_chopstick = 1;
+            right_chopstick = 5;
+        }
+    }
+}
+
 void set_coordinator_next(char str[]) // TODO - strs old, do I even need to detect next PHIL ID? Since I have port?
 {
     // print_log("========INSIDE SET COORD\n");
@@ -174,8 +356,6 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
     char *token = strtok(str, SEPARATORS);
     int id_ints[PHILOSOPHER_COUNT];
     int i = 0;
-    int my_index = -1;
-    int coordinator_index = -1;
     while (token != NULL)
     {
         int token_int = atoi(token);
@@ -209,6 +389,11 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
         // print_log("========THIRD_IF, %d\n", read_ports[my_index + 2]);
         next_write_port = read_ports[my_index + 2];
     }
+
+    // TODO - here need to go through string again, and assign chopsticks. Separate function is OK
+    // TODO - need to figure out how to wait periods of time? Alarm? Another signal/syscall? Easier way? Use sleep for simplicuty?
+    // TODO - can use existing random number gen for phase minute generation?
+    // TODO - 2 vars - isSleeping, isEating
 
     coordinator = max;
     coordinator_port = read_ports[coordinator_index];
