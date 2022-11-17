@@ -25,6 +25,8 @@
         "iostream": "c",
         "_types.h": "c",
         "pthread.h": "c",
-        "__threading_support": "c"
+        "__threading_support": "c",
+        "__locale": "c",
+        "locale": "c"
     }
 }

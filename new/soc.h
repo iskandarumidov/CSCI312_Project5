@@ -22,6 +22,7 @@
 #include <sys/syscall.h>
 #include <sys/mman.h>
 #include <sys/select.h>
+#include <pthread.h>
 
 char *timestamp();
 int get_random_in_range(int low, int high);

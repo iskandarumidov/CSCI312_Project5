@@ -24,12 +24,13 @@ void extract_ids()
     int i = 0;
     while (token != NULL)
     {
-        if (id != atoi(token))
-        {
-            philosopher_ids[i] = atoi(token);
-            i++;
-        }
+        philosopher_ids[i] = (id == atoi(token) ? -1 : atoi(token));
         token = strtok(NULL, SEPARATORS);
+        i++;
+    }
+    for (int i = 0; i < PHILOSOPHER_COUNT; i++)
+    {
+        printf("Philosopher ID: %d\n", philosopher_ids[i]);
     }
 }
 

@@ -7,6 +7,14 @@ void setup_client();
 void setup_client_with_port(int port);
 void append_cur_id();
 void setup_chopsticks();
+void think();
+void eat();
+// void request_left_chopstick();
+// void request_right_chopstick();
+void request_chopstick(int chopstick);
+// int get_response_left_chopstick();
+int get_response_chopstick();
+void release_chopstick(int chopstick);
 
 int id = -1;
 int coordinator = -1;
@@ -29,10 +37,16 @@ int my_index = -1;
 int coordinator_index = -1;
 int left_chopstick = -1;
 int right_chopstick = -1;
+int has_left_chopstick = 0;
+int has_right_chopstick = 0;
 
 char election_message[BUFFER_LEN] = "E;";
 char coordinator_message[BUFFER_LEN] = "C;";
+char central_message[BUFFER_LEN] = "Q;";
 // char coordinator_message[BUFFER_LEN] = "C;123;45;6;78;1;";
+
+int is_eating = 0;
+int is_thinking = 0;
 
 #define print_log(f_, ...) printf("[%s] PHIL ID: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
@@ -115,7 +129,7 @@ int main(int argc, char *argv[])
         // Send Coordinator message to next node
         sleep(1);
         setup_client();
-        coordinator_message[0] = 'C'; // BUG - so somewhere here . P0 gets only letter C from P5
+        coordinator_message[0] = 'C';
         err = write(sock_write, coordinator_message, sizeof(coordinator_message));
         check_syscall_err(err, "write error");
         close(sock_write);
@@ -124,7 +138,6 @@ int main(int argc, char *argv[])
         // Now that I have full coordinator message, I am done communicating with peers
 
         // TODO - now think of logic to cut out the coordinator and rearrange the ring
-        // BUG - need to pass -pthread to makefile to both
     }
 
     set_coordinator_next(coordinator_message);
@@ -139,8 +152,9 @@ int main(int argc, char *argv[])
         char phil_id_char[BUFFER_LEN];
         sprintf(phil_id_char, "%d", id);
         char self_read_port_char[BUFFER_LEN];
-        sprintf(self_read_port_char, "%d", self_read_port); // TODO - pass C string with self id
-        err = execl("./coordinator", "coordinator", phil_id_char, self_read_port_char, (char *)NULL);
+        sprintf(self_read_port_char, "%d", self_read_port);
+        // print_log("PASSING TO COORDINATOR EXEC: %s\n", buffer);
+        err = execl("./coordinator", "coordinator", phil_id_char, self_read_port_char, buffer, (char *)NULL);
         check_syscall_err(err, "Execl coordinator failed");
     }
 
@@ -151,17 +165,48 @@ int main(int argc, char *argv[])
 
     // TODO - implement algorithm of getting one chopstick at a time. Log attempts to get chopstick and successes
 
-    // Send request to coordinator
     sleep(10);
+    // Start communication with coordinator only after ring algo completely done
     setup_client_with_port(coordinator_port);
-    char test_to_send[BUFFER_LEN];
-    sprintf(test_to_send, "%d", 1);
-    err = write(sock_write, test_to_send, sizeof(test_to_send));
-    check_syscall_err(err, "write error after coord decided");
+    int i = 0;
+    for (i = 0; i < 1; i++) // TODO - change to while(1)
+    {
+        think();
+
+        // request_left_chopstick();
+        request_chopstick(left_chopstick);
+        has_left_chopstick = get_response_chopstick();
+        print_log("HAS LEFT CHOPSTICK: %d\n", has_left_chopstick);
+        if (has_left_chopstick)
+        {
+            request_chopstick(right_chopstick);
+            has_right_chopstick = get_response_chopstick();
+            print_log("HAS RIGHT CHOPSTICK: %d\n", has_right_chopstick);
+            if (has_right_chopstick)
+            {
+                eat();
+                release_chopstick(left_chopstick);
+                has_left_chopstick = 0;
+                release_chopstick(right_chopstick);
+                has_left_chopstick = 1;
+            }
+            else
+            {
+                release_chopstick(left_chopstick);
+                has_left_chopstick = 0;
+            }
+        }
+    }
+
+    // char test_to_send[BUFFER_LEN];
+    // sprintf(test_to_send, "%d", 1);
+    // err = write(sock_write, test_to_send, sizeof(test_to_send));
+    // check_syscall_err(err, "write error after coord decided");
     close(sock_write);
     // print_log("DONE WITH NOT ELECTION STARTER\n");
 
-    // TODO - might need to use threads like Hamnes said - on thread listens for messages
+    // TODO - might need to use threads like Hamnes said - one thread listens for messages
+    // TODO - writers to coord are in MAIN, readers are in thread
 
     return EXIT_SUCCESS;
 }
@@ -351,7 +396,6 @@ void setup_chopsticks()
 
 void set_coordinator_next(char str[]) // TODO - strs old, do I even need to detect next PHIL ID? Since I have port?
 {
-    // print_log("========INSIDE SET COORD\n");
     int max = id;
     char *token = strtok(str, SEPARATORS);
     int id_ints[PHILOSOPHER_COUNT];
@@ -372,28 +416,23 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
         token = strtok(NULL, SEPARATORS);
         i++;
     }
-    // print_log("========DONE WITH WHILE. MAX: %d, COORD_INDEX: %d, MY_INDEX: %d\n", max, coordinator_index, my_index);
     // BUG - here to determine if next port is to be changed. ALSO - need to include if self is coordinator?
-    if (my_index + 1 == coordinator_index && coordinator_index == PHILOSOPHER_COUNT - 1) // BUG - PHILOSOPHER_COUNT - off-by-one errors!
+    if (my_index + 1 == coordinator_index && coordinator_index == PHILOSOPHER_COUNT - 1)
     {
-        // print_log("========FIRST_IF, %d\n", read_ports[0]);
         next_write_port = read_ports[0];
     }
     else if (my_index == PHILOSOPHER_COUNT - 1 && coordinator_index == 0)
     {
-        // print_log("========SECOND_IF, %d\n", read_ports[1]);
         next_write_port = read_ports[1];
     }
     else if (my_index + 1 == coordinator_index)
     {
-        // print_log("========THIRD_IF, %d\n", read_ports[my_index + 2]);
         next_write_port = read_ports[my_index + 2];
     }
 
     // TODO - here need to go through string again, and assign chopsticks. Separate function is OK
     // TODO - need to figure out how to wait periods of time? Alarm? Another signal/syscall? Easier way? Use sleep for simplicuty?
     // TODO - can use existing random number gen for phase minute generation?
-    // TODO - 2 vars - isSleeping, isEating
 
     coordinator = max;
     coordinator_port = read_ports[coordinator_index];
@@ -445,3 +484,74 @@ void setup_client_with_port(int port)
     sleep(1);
     // print_log("Writer created\n");
 }
+
+void think()
+{
+    int think_time = get_random_in_range(1200000, 3000000); // 1.2s - 3s
+    print_log("Thinking for %.2f\n", think_time / (float)1000000);
+    usleep(think_time);
+}
+
+void eat()
+{
+    int eat_time = get_random_in_range(1200000, 3000000); // 1.2s - 3s
+    print_log("Eating for %.2f\n", eat_time / (float)1000000);
+    usleep(eat_time);
+}
+
+// void request_left_chopstick()
+// {
+//     char msg[BUFFER_LEN];
+//     sprintf(msg, "Q;%d;", left_chopstick);
+//     print_log("Requesting left chopstick: %s\n", msg);
+//     err = write(sock_write, msg, sizeof(msg));
+//     check_syscall_err(err, "left chopstick err");
+// }
+
+// int get_response_left_chopstick()
+// {
+//     err = read(sock_write, buffer, sizeof(buffer));
+//     check_syscall_err(err, "get_response_left chopstick err");
+//     print_log("Got response for left chopstick: %s\n", buffer);
+//     return atoi(buffer);
+// }
+
+int get_response_chopstick()
+{
+    err = read(sock_write, buffer, sizeof(buffer));
+    check_syscall_err(err, "get_response_chopstick err");
+    print_log("Got response for chopstick: %s\n", buffer);
+    return atoi(buffer);
+}
+
+void request_chopstick(int chopstick)
+{
+    char msg[BUFFER_LEN];
+    sprintf(msg, "Q;%d;", chopstick);
+    print_log("Requesting chopstick: %s\n", msg);
+    err = write(sock_write, msg, sizeof(msg));
+    check_syscall_err(err, "chopstick err");
+}
+
+// TODO - reqest_chopstick(int chopstick) -- to reduce code duplication
+// void request_right_chopstick()
+// {
+//     char msg[BUFFER_LEN];
+//     sprintf(msg, "Q;%d;", right_chopstick);
+//     print_log("Requesting right chopstick: %s\n", msg);
+//     err = write(sock_write, msg, sizeof(msg));
+//     check_syscall_err(err, "right chopstick err");
+// }
+
+void release_chopstick(int chopstick)
+{
+    char msg[BUFFER_LEN];
+    sprintf(msg, "R;%d;", chopstick);
+    print_log("Releasing chopstick: %s\n", msg);
+    err = write(sock_write, msg, sizeof(msg));
+    check_syscall_err(err, "release chopstick err");
+}
+
+// void release_left_chopstick()
+// void release_right_chopstick()
+// void release_chopsticks()

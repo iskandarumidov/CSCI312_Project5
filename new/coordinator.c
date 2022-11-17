@@ -14,22 +14,26 @@ struct sockaddr_in read_adr;
 int err;
 int chopsticks[6] = {-1, 1, 2, 3, 4, 5}; // TODO - change to only 0s and 1s? 0-based?
 char incoming_msg[BUFFER_LEN];
-int philosopher_ids[PHILOSOPHER_COUNT - 1];
+int philosopher_ids[PHILOSOPHER_COUNT];
+char philosopher_ids_string[BUFFER_LEN];
 
 #define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 void setup_server();
 void setup_client();
+void extract_ids();
 
 int main(int argc, char *argv[])
 {
     id = atoi(argv[1]);
     self_read_port = atoi(argv[2]);
+    sprintf(philosopher_ids_string, "%s", argv[3]);
 
-    print_log("INSIDE COORDINATOR!\n");
+    print_log("INSIDE COORDINATOR! Coord msg: %s\n", philosopher_ids_string);
+    extract_ids();
+
     // dequeue();
     setup_server();
-    int i;
-    for (i = 0; i < 10; i++) // BUG - needs to be while(1)?
+    while (1)
     {
         clientLength = sizeof(client_adr);
         new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
@@ -39,12 +43,13 @@ int main(int argc, char *argv[])
         check_syscall_err(err, "read coord error");
         sprintf(incoming_msg, "%s", buffer);
         print_log("FROM CLIENT: %s\n", incoming_msg);
+
+        err = write(new_sock_read, "1", sizeof("1"));
+        check_syscall_err(err, "read coord error");
     }
 
     close(sock_read);
     close(new_sock_read);
-
-    // incoming_msg
 
     return EXIT_SUCCESS;
 }
@@ -79,4 +84,20 @@ void setup_client(int remote_port_to_write)
     check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
     sleep(1);
     print_log("Writer created\n");
+}
+
+void extract_ids()
+{
+    char *token = strtok(philosopher_ids_string, SEPARATORS);
+    int i = 0;
+    while (token != NULL)
+    {
+        philosopher_ids[i] = (id == atoi(token) ? -1 : atoi(token));
+        token = strtok(NULL, SEPARATORS);
+        i++;
+    }
+    // for (int i = 0; i < PHILOSOPHER_COUNT; i++)
+    // {
+    //     printf("Philosopher ID: %d\n", philosopher_ids[i]);
+    // }
 }
