@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#define NULL 0
 
 pthread_t tid[2];
 int counter;
@@ -39,12 +40,9 @@ int main(void)
 
     while (i < 2)
     {
-        error = pthread_create(&(tid[i]),
-                               NULL,
-                               &trythis, NULL);
+        error = pthread_create(&(tid[i]), NULL, &trythis, NULL);
         if (error != 0)
-            printf("\nThread can't be created :[%s]",
-                   strerror(error));
+            printf("\nThread can't be created :[%s]", strerror(error));
         i++;
     }
 

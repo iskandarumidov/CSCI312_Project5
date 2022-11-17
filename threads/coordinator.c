@@ -91,19 +91,32 @@ void setup_server()
 
 int main(int argc, char *argv[])
 {
+    // TODO - have to use threads in coordinator too? one for each accept?
 
     setup_server();
 
     err = read(newsockfd, buf, sizeof(buf));
-    printf("FROM CLIENT: %s\n", buf);
+    if (err < 0)
+    {
+        printf("READ ERR\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("FROM PHILOSOPHER: %s\n", buf);
+    printf("CHANGING BUF\n");
+    buf[0] = 'Y';
 
-    err = write(sock_fd, buf, sizeof(buf));
+    err = write(newsockfd, buf, sizeof(buf));
+    if (err < 0)
+    {
+        printf("WRITE ERR\n");
+        exit(EXIT_FAILURE);
+    }
 
     close(sock_fd); // close old socket file descriptor
     close(newsockfd);
 
-    setup_client();
-    close(sock_fd);
+    // setup_client();
+    // close(sock_fd);
 
     printf("SERVERC: Terminating serverC\n");
 

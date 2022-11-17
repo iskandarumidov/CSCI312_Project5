@@ -24,6 +24,7 @@
         "philosopher.h": "c",
         "iostream": "c",
         "_types.h": "c",
-        "pthread.h": "c"
+        "pthread.h": "c",
+        "__threading_support": "c"
     }
 }
