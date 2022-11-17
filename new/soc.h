@@ -34,7 +34,7 @@ void check_syscall_err(int syscall_err, char *syscall_err_msg);
 #define NULL 0
 #define MAX_CLIENT_QUEUE 5
 #define BUFFER_LEN 256
-#define SEPARATORS "EC;"
+#define SEPARATORS "ECQRD;" // added more separators
 #define PHILOSOPHER_COUNT 6
 
 int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};	 // PHIL reads at this

@@ -61,51 +61,6 @@ void setup_client()
     conn_success = 1;
 }
 
-void setup_server()
-{
-    printf("SERVERC: Creating socket\n");
-    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    // fcntl(sock_fd, F_SETFL, O_NONBLOCK);
-    if (sock_fd < 0)
-    {
-        printf("SERVERC: Socket opening failed\n");
-        exit(EXIT_FAILURE);
-    }
-    bzero((char *)&serv_adr, sizeof(serv_adr));
-    memset(&serv_adr, 0, sizeof(struct sockaddr_in));
-
-    serv_adr.sin_family = AF_INET;
-    serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_adr.sin_port = htons(SERVERPORT);
-
-    const int enable = 1;
-    if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-        printf("setsockopt(SO_REUSEADDR) failed\n");
-
-    printf("SERVERC: Binding the Socket\n");
-
-    if (bind(sock_fd, (struct sockaddr *)&serv_adr, sizeof(serv_adr)) < 0)
-    {
-        printf("SERVERC: Binding to socket failed\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (listen(sock_fd, MAX_CLIENT_QUEUE) == -1)
-    {
-        printf("SERVERC: Binding to socket failed\n");
-        exit(EXIT_FAILURE);
-    }
-    printf("SERVERC: New Server created on IP: %s | Port: %d\n", SERVERIP, SERVERPORT);
-
-    clientLength = sizeof(client_adr);
-    newsockfd = accept(sock_fd, (struct sockaddr *)&client_adr, &clientLength);
-    if (newsockfd < 0)
-    {
-        printf("SERVERC: Socket accept failed\n");
-        exit(EXIT_FAILURE);
-    }
-}
-
 int main(int argc, char *argv[])
 {
     if (pthread_mutex_init(&lock, NULL) != 0)
@@ -121,7 +76,7 @@ int main(int argc, char *argv[])
         setup_client();
         sleep(1);
     }
-    char str[100] = "R;1;";
+    char str[100] = "Q;999;1;";
     sprintf(buffer, "%s", str);
     // sprintf(buffer, "%d", user_input);
     err = write(sock_fd, buffer, sizeof(buffer));
@@ -139,20 +94,12 @@ int main(int argc, char *argv[])
         printf("\nThread can't be created :[%s]", strerror(err));
     pthread_detach(thread);
 
-    usleep(5000000); // sleep 1 sec
+    usleep(5000000); // sleep 5 sec
     printf("FROM COORDINATOR (MAIN THREAD): %s\n", buffer);
 
     print_log("Closing the Connection...\n");
     close(sock_fd);
 
-    // setup_server();
-    // err = read(newsockfd, buffer, sizeof(buffer));
-    // printf("FROM COORDINATOR: %s\n", buffer);
-    // close(sock_fd);
-    // close(newsockfd);
     pthread_mutex_destroy(&lock);
     return 0;
 }
-
-// TODO - on coordinator side - close listener and open sender.
-// TODO - on philosopher side - if failed, try again 10 times.

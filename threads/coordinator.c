@@ -1,47 +1,56 @@
 #include "soc.h"
+#include <pthread.h>
 
 int sock_fd,   // Original Socket for serverC
     newsockfd, // New socket for serverG
     pid;       // PID for Fork
-char buf[256];
+char buffer[256];
 socklen_t clientLength;
 struct sockaddr_in serv_adr, client_adr;
 struct sockaddr_in serv_addr; // Server Address for Socket
 int err;
 int conn_success = -1;
 
-void setup_client()
+pthread_t thread;
+pthread_mutex_t lock;
+
+char philosopher_ids_string[BUFFER_LEN] = "C;123;45;6;78;1;17;";
+int philosopher_ids[PHILOSOPHER_COUNT - 1];
+int id = 123;
+
+void extract_ids()
 {
-    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    // fcntl(sock_fd, F_SETFL, O_NONBLOCK);
-    if (sock_fd < 0)
+    char *token = strtok(philosopher_ids_string, SEPARATORS);
+    int i = 0;
+    while (token != NULL)
     {
-        print_log("ERROR: Error opening the socket.");
-        exit(1);
+        if (id != atoi(token))
+        {
+            philosopher_ids[i] = atoi(token);
+            i++;
+        }
+        token = strtok(NULL, SEPARATORS);
     }
+}
 
-    bzero((char *)&serv_addr, sizeof(serv_addr));
-    memset(&serv_addr, 0, sizeof(struct sockaddr_in));
+void *trythis(void *arg)
+{
+    unsigned int newsocket_in_thread = *((unsigned int *)arg);
+    pthread_mutex_lock(&lock);
+    printf("Job has started\n");
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(SERVERPORT);
-    serv_addr.sin_addr.s_addr = inet_addr(SERVERIP);
-
-    print_log("Setting up Connection...\n");
-
-    int resp = connect(sock_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-    if (resp < 0)
+    err = read(newsocket_in_thread, buffer, sizeof(buffer));
+    if (err < 0)
     {
-        print_log("ERROR connecting\n");
-        conn_success = -1;
-        return;
-        // exit(2);
+        printf("READ ERR\n");
+        exit(EXIT_FAILURE);
     }
-    // sleep(1);
-    print_log("Connection Established to Server\n");
-    conn_success = 1;
+    printf("FROM PHILOSOPHER (IN THREAD): %s\n", buffer);
 
-    // bzero(buffer, sizeof(buffer));
+    printf("Job has finished\n");
+    pthread_mutex_unlock(&lock);
+
+    return NULL;
 }
 
 void setup_server()
@@ -54,8 +63,8 @@ void setup_server()
         printf("SERVERC: Socket opening failed\n");
         exit(EXIT_FAILURE);
     }
-    bzero((char *)&serv_adr, sizeof(serv_adr));
-    memset(&serv_adr, 0, sizeof(struct sockaddr_in));
+    // bzero((char *)&serv_adr, sizeof(serv_adr));
+    // memset(&serv_adr, 0, sizeof(struct sockaddr_in));
 
     serv_adr.sin_family = AF_INET;
     serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -80,44 +89,56 @@ void setup_server()
     }
     printf("SERVERC: New Server created on IP: %s | Port: %d\n", SERVERIP, SERVERPORT);
 
-    clientLength = sizeof(client_adr);
-    newsockfd = accept(sock_fd, (struct sockaddr *)&client_adr, &clientLength);
-    if (newsockfd < 0)
-    {
-        printf("SERVERC: Socket accept failed\n");
-        exit(EXIT_FAILURE);
-    }
+    // clientLength = sizeof(client_adr);
+    // newsockfd = accept(sock_fd, (struct sockaddr *)&client_adr, &clientLength);
+    // if (newsockfd < 0)
+    // {
+    //     printf("SERVERC: Socket accept failed\n");
+    //     exit(EXIT_FAILURE);
+    // }
 }
 
 int main(int argc, char *argv[])
 {
-    // TODO - have to use threads in coordinator too? one for each accept?
+    extract_ids();
+    if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+        printf("mutex init has failed\n");
+        return 1;
+    }
 
     setup_server();
 
-    err = read(newsockfd, buf, sizeof(buf));
-    if (err < 0)
+    while (1)
     {
-        printf("READ ERR\n");
-        exit(EXIT_FAILURE);
-    }
-    printf("FROM PHILOSOPHER: %s\n", buf);
-    printf("CHANGING BUF\n");
-    buf[0] = 'Y';
 
-    err = write(newsockfd, buf, sizeof(buf));
-    if (err < 0)
-    {
-        printf("WRITE ERR\n");
-        exit(EXIT_FAILURE);
+        clientLength = sizeof(client_adr);
+        newsockfd = accept(sock_fd, (struct sockaddr *)&client_adr, &clientLength);
+        if (newsockfd < 0)
+        {
+            printf("SERVERC: Socket accept failed\n");
+            exit(EXIT_FAILURE);
+        }
+
+        err = pthread_create(&thread, NULL, &trythis, (void *)&newsockfd);
+        if (err != 0)
+            printf("\nThread can't be created :[%s]", strerror(err));
+        pthread_detach(thread);
+        printf("FROM PHILOSOPHER (IN MAIN): %s\n", buffer);
+        printf("CHANGING BUF\n");
+        buffer[0] = 'Y';
+
+        err = write(newsockfd, buffer, sizeof(buffer));
+        if (err < 0)
+        {
+            printf("WRITE ERR\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
-    close(sock_fd); // close old socket file descriptor
+    close(sock_fd);
     close(newsockfd);
-
-    // setup_client();
-    // close(sock_fd);
-
+    pthread_mutex_destroy(&lock);
     printf("SERVERC: Terminating serverC\n");
 
     return EXIT_SUCCESS;

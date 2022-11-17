@@ -1,8 +1,8 @@
 all: kp current
 
 current:
-	cc -Wno-macro-redefined coordinator.c -o coordinator
-	cc -Wno-macro-redefined philosopher.c -o philosopher
+	cc -Wno-macro-redefined coordinator.c -o coordinator -pthread
+	cc -Wno-macro-redefined philosopher.c -o philosopher -pthread
 
 kp:
 	-kill $$(lsof -t -i :31200 -s TCP:LISTEN)

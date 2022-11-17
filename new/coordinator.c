@@ -14,6 +14,7 @@ struct sockaddr_in read_adr;
 int err;
 int chopsticks[6] = {-1, 1, 2, 3, 4, 5}; // TODO - change to only 0s and 1s? 0-based?
 char incoming_msg[BUFFER_LEN];
+int philosopher_ids[PHILOSOPHER_COUNT - 1];
 
 #define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 void setup_server();
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
     // dequeue();
     setup_server();
     int i;
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++) // BUG - needs to be while(1)?
     {
         clientLength = sizeof(client_adr);
         new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);

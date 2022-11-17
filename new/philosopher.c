@@ -124,6 +124,7 @@ int main(int argc, char *argv[])
         // Now that I have full coordinator message, I am done communicating with peers
 
         // TODO - now think of logic to cut out the coordinator and rearrange the ring
+        // BUG - need to pass -pthread to makefile to both
     }
 
     set_coordinator_next(coordinator_message);
@@ -138,7 +139,7 @@ int main(int argc, char *argv[])
         char phil_id_char[BUFFER_LEN];
         sprintf(phil_id_char, "%d", id);
         char self_read_port_char[BUFFER_LEN];
-        sprintf(self_read_port_char, "%d", self_read_port);
+        sprintf(self_read_port_char, "%d", self_read_port); // TODO - pass C string with self id
         err = execl("./coordinator", "coordinator", phil_id_char, self_read_port_char, (char *)NULL);
         check_syscall_err(err, "Execl coordinator failed");
     }
@@ -178,7 +179,6 @@ void append_cur_id()
 
 void setup_chopsticks()
 {
-    // int cur_chopstick = 1;
     if (coordinator_index == 0)
     {
         if (my_index == 1)
