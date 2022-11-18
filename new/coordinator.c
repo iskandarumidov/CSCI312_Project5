@@ -17,78 +17,136 @@ char incoming_msg[BUFFER_LEN];
 int philosopher_ids[PHILOSOPHER_COUNT];
 char philosopher_ids_string[BUFFER_LEN];
 
-#define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
-void setup_server();
-void extract_ids();
-void *process(void *arg);
+#define DATA_BUFFER 5000
+#define MAX_CONNECTIONS 1000
+int all_connections[MAX_CONNECTIONS];
 
-pthread_t thread;
-pthread_mutex_t lock;
+#define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
+
+void extract_ids();
+int create_tcp_server_socket();
+void print_conn_arr();
+
+// TODO - still haven't touched queue and shared var
 
 int main(int argc, char *argv[])
 {
-    if (pthread_mutex_init(&lock, NULL) != 0)
-    {
-        print_log("mutex init has failed\n");
-        return EXIT_FAILURE;
-    }
-
     id = atoi(argv[1]);
     self_read_port = atoi(argv[2]);
     sprintf(philosopher_ids_string, "%s", argv[3]);
-
     print_log("INSIDE COORDINATOR! Coord msg: %s\n", philosopher_ids_string);
     extract_ids();
 
-    // dequeue();
-    setup_server();
-    // while (1)
-    int i = 0;
-    for (i = 0; i < PHILOSOPHER_COUNT - 1; i++)
-    // while (1)
+    fd_set read_fd_set;
+    struct sockaddr_in new_addr;
+    int server_fd, new_fd, ret_val, i;
+    socklen_t addrlen;
+    char buf[DATA_BUFFER];
+
+    server_fd = create_tcp_server_socket();
+    check_syscall_err(server_fd, "Failed to create a server");
+
+    for (i = 0; i < MAX_CONNECTIONS; i++)
     {
-        print_log("INCOMING CONNETION #%d\n", i);
-        clientLength = sizeof(client_adr);
-        new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
-        check_syscall_err(new_sock_read, "Socket accept failed");
-
-        err = pthread_create(&thread, NULL, &process, (void *)&new_sock_read);
-        if (err != 0)
-            printf("\nThread can't be created :[%s]", strerror(err));
-        pthread_detach(thread);
-
-        // err = read(new_sock_read, buffer, sizeof(buffer));
-        // check_syscall_err(err, "read coord error");
-        // sprintf(incoming_msg, "%s", buffer);
-        // print_log("FROM CLIENT: %s\n", incoming_msg);
-
-        // err = write(new_sock_read, "1", sizeof("1"));
-        // check_syscall_err(err, "read coord error");
+        all_connections[i] = -1;
     }
+    all_connections[0] = server_fd;
+
     while (1)
     {
+        FD_ZERO(&read_fd_set);
+        /* Set the fd_set before passing it to the select call */
+        for (i = 0; i < MAX_CONNECTIONS; i++)
+        {
+            if (all_connections[i] >= 0)
+            {
+                FD_SET(all_connections[i], &read_fd_set);
+            }
+        }
+
+        /* Invoke select() and then wait! */
+        printf("\nUsing select() to listen for incoming events\n");
+        ret_val = select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL);
+
+        /* select() woke up. Identify the fd that has events */
+        if (ret_val >= 0)
+        {
+            printf("Select returned with %d\n", ret_val);
+            /* Check if the fd with event is the server fd */
+            if (FD_ISSET(server_fd, &read_fd_set))
+            {
+                /* accept the new connection */
+                printf("Returned fd is %d (server's fd)\n", server_fd);
+                new_fd = accept(server_fd, (struct sockaddr *)&new_addr, &addrlen);
+                if (new_fd >= 0)
+                {
+                    printf("Accepted a new connection with fd: %d\n", new_fd);
+                    for (i = 0; i < MAX_CONNECTIONS; i++)
+                    {
+                        if (all_connections[i] < 0)
+                        {
+                            all_connections[i] = new_fd;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    fprintf(stderr, "accept failed [%s]\n", strerror(errno));
+                }
+                ret_val--;
+                if (!ret_val)
+                    continue;
+            }
+
+            /* Check if the fd with event is a non-server fd */
+            for (i = 1; i < MAX_CONNECTIONS; i++)
+            {
+                if ((all_connections[i] > 0) && (FD_ISSET(all_connections[i], &read_fd_set)))
+                {
+                    /* read incoming data */
+                    printf("Returned fd is %d [index, i: %d]\n", all_connections[i], i);
+                    ret_val = recv(all_connections[i], buf, DATA_BUFFER, 0);
+                    if (ret_val == 0)
+                    {
+                        printf("Closing connection for fd:%d\n", all_connections[i]);
+                        close(all_connections[i]);
+                        all_connections[i] = -1; /* Connection is now closed */
+                    }
+                    if (ret_val > 0)
+                    {
+                        printf("Received data (len %d bytes, fd: %d): %s\n", ret_val, all_connections[i], buf);
+                        if (buf[0] == 'Q')
+                        {
+                            int wr_len = send(all_connections[i], "1", DATA_BUFFER, 0);
+                            printf("WROTE\n");
+                            print_conn_arr();
+                        }
+                    }
+                    if (ret_val == -1)
+                    {
+                        printf("recv() failed for fd: %d [%s]\n", all_connections[i], strerror(errno));
+                        break;
+                    }
+                }
+                ret_val--;
+                if (!ret_val)
+                    continue;
+            }
+        }
     }
 
-    close(sock_read);
-    close(new_sock_read);
-    pthread_mutex_destroy(&lock);
+    /* Last step: Close all the sockets */
+    for (i = 0; i < MAX_CONNECTIONS; i++)
+    {
+        if (all_connections[i] > 0)
+        {
+            close(all_connections[i]);
+        }
+    }
+
     print_log("Terminating...\n");
-
     return EXIT_SUCCESS;
-}
-
-void setup_server()
-{
-    sock_read = socket(AF_INET, SOCK_STREAM, 0);
-    check_syscall_err(sock_read, "Socket opening failed");
-
-    serv_adr.sin_family = AF_INET;
-    serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_adr.sin_port = htons(self_read_port);
-
-    check_syscall_err(bind(sock_read, (struct sockaddr *)&serv_adr, sizeof(serv_adr)), "Binding to socket failed");
-    check_syscall_err(listen(sock_read, MAX_CLIENT_QUEUE), "Listening to socket failed");
-    print_log("Node listening on port: %d\n", self_read_port);
 }
 
 void extract_ids()
@@ -103,31 +161,32 @@ void extract_ids()
     }
 }
 
-void *process(void *arg)
+int create_tcp_server_socket()
 {
-    unsigned int newsocket_in_thread = *((unsigned int *)arg);
-    while (1)
+    struct sockaddr_in saddr;
+    int fd, ret_val;
+
+    fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    check_syscall_err(fd, "Socket opening failed");
+
+    saddr.sin_family = AF_INET;
+    saddr.sin_port = htons(self_read_port);
+    saddr.sin_addr.s_addr = INADDR_ANY;
+
+    ret_val = bind(fd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
+    check_syscall_err(ret_val, "Bind failed");
+
+    ret_val = listen(fd, 5);
+    check_syscall_err(ret_val, "Listen failed");
+    return fd;
+}
+
+void print_conn_arr()
+{
+    int i;
+    for (i = 0; i < 20; i++)
     {
-        // pthread_mutex_lock(&lock);
-        err = read(newsocket_in_thread, buffer, sizeof(buffer));
-        if (err == 0)
-        {
-            print_log("Client disconnected\n");
-            break;
-            // exit(EXIT_SUCCESS);
-        }
-        check_syscall_err(err, "thread read failed");
-        print_log("FROM PHILOSOPHER (IN THREAD): %s\n", buffer);
-        // pthread_mutex_unlock(&lock);
-
-        err = write(new_sock_read, "1", sizeof("1"));
-        check_syscall_err(err, "write coord error");
+        printf("%d ", all_connections[i]);
     }
-
-    // pthread_mutex_lock(&lock);
-    // print_log("Job has started\n");
-
-    // printf("Job has finished\n");
-    // pthread_mutex_unlock(&lock);
-    return NULL;
+    printf("\n");
 }

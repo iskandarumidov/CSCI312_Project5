@@ -161,9 +161,9 @@ int main()
                 ret_val--;
                 if (!ret_val)
                     continue;
-            } /* for-loop */
-        }     /* (ret_val >= 0) */
-    }         /* while(1) */
+            }
+        }
+    }
 
     /* Last step: Close all the sockets */
     for (i = 0; i < MAX_CONNECTIONS; i++)

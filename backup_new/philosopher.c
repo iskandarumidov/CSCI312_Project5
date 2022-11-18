@@ -11,7 +11,7 @@ void think();
 void eat();
 // void request_left_chopstick();
 // void request_right_chopstick();
-int request_chopstick(int chopstick);
+void request_chopstick(int chopstick);
 // int get_response_left_chopstick();
 int get_response_chopstick();
 void release_chopstick(int chopstick);
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
         char self_read_port_char[BUFFER_LEN];
         sprintf(self_read_port_char, "%d", self_read_port);
         // print_log("PASSING TO COORDINATOR EXEC: %s\n", buffer);
-        err = execl("./bin/coordinator", "coordinator", phil_id_char, self_read_port_char, buffer, (char *)NULL);
+        err = execl("./coordinator", "coordinator", phil_id_char, self_read_port_char, buffer, (char *)NULL);
         check_syscall_err(err, "Execl coordinator failed");
     }
 
@@ -175,77 +175,35 @@ int main(int argc, char *argv[])
     think();
 
     // request_left_chopstick();
-    // while (1)
-    int i = 0;
-    for (i = 0; i < 10; i++)
+    request_chopstick(left_chopstick);
+    has_left_chopstick = get_response_chopstick();
+    print_log("HAS LEFT CHOPSTICK: %d\n", has_left_chopstick);
+    if (has_left_chopstick)
     {
-        has_left_chopstick = request_chopstick(left_chopstick);
-        if (has_left_chopstick)
+        request_chopstick(right_chopstick);
+        has_right_chopstick = get_response_chopstick();
+        print_log("HAS RIGHT CHOPSTICK: %d\n", has_right_chopstick);
+        if (has_right_chopstick)
         {
-            print_log("Got left chopstick\n");
-            has_right_chopstick = request_chopstick(right_chopstick);
-            if (has_right_chopstick)
-            {
-                print_log("Got right chopstick\n");
-                eat();
-                release_chopstick(left_chopstick);
-                release_chopstick(right_chopstick);
-            }
-            else
-            {
-                print_log("Did not get right chopstick\n");
-                release_chopstick(left_chopstick);
-            }
+            // eat();
+            release_chopstick(left_chopstick);
+            has_left_chopstick = 0;
+            release_chopstick(right_chopstick);
+            has_left_chopstick = 1;
         }
         else
         {
-            print_log("Failed to get left chopstick\n");
+            release_chopstick(left_chopstick);
+            has_left_chopstick = 0;
         }
-
-        think();
     }
-
-    // has_left_chopstick = request_chopstick(left_chopstick);
-    // think();
-    // has_left_chopstick = request_chopstick(left_chopstick);
-    // think();
-    // get_response_chopstick();
-
-    /*
-
-        request_chopstick(left_chopstick);
-        has_left_chopstick = get_response_chopstick();
-        print_log("HAS LEFT CHOPSTICK: %d\n", has_left_chopstick);
-        if (has_left_chopstick)
-        {
-            request_chopstick(right_chopstick);
-            has_right_chopstick = get_response_chopstick();
-            print_log("HAS RIGHT CHOPSTICK: %d\n", has_right_chopstick);
-            if (has_right_chopstick)
-            {
-                // eat();
-                release_chopstick(left_chopstick);
-                has_left_chopstick = 0;
-                release_chopstick(right_chopstick);
-                has_left_chopstick = 1;
-            }
-            else
-            {
-                release_chopstick(left_chopstick);
-                has_left_chopstick = 0;
-            }
-        }*/
-
     // }
 
     // char test_to_send[BUFFER_LEN];
     // sprintf(test_to_send, "%d", 1);
     // err = write(sock_write, test_to_send, sizeof(test_to_send));
     // check_syscall_err(err, "write error after coord decided");
-
-    // TRY TO KEEP OPEN? // BUG
-    // close(sock_write);
-
+    close(sock_write);
     // print_log("DONE WITH NOT ELECTION STARTER\n");
 
     // TODO - might need to use threads like Hamnes said - one thread listens for messages
@@ -542,46 +500,59 @@ void eat()
     usleep(eat_time);
 }
 
+// void request_left_chopstick()
+// {
+//     char msg[BUFFER_LEN];
+//     sprintf(msg, "Q;%d;", left_chopstick);
+//     print_log("Requesting left chopstick: %s\n", msg);
+//     err = write(sock_write, msg, sizeof(msg));
+//     check_syscall_err(err, "left chopstick err");
+// }
+
+// int get_response_left_chopstick()
+// {
+//     err = read(sock_write, buffer, sizeof(buffer));
+//     check_syscall_err(err, "get_response_left chopstick err");
+//     print_log("Got response for left chopstick: %s\n", buffer);
+//     return atoi(buffer);
+// }
+
 int get_response_chopstick()
 {
-    return -1;
-    // err = read(sock_write, buffer, sizeof(buffer));
-
-    // err = recv(sock_write, buffer, sizeof(buffer), 0);
-    // check_syscall_err(err, "get_response_chopstick err");
-    // print_log("Got response for chopstick: %s\n", buffer);
-    // return atoi(buffer);
-
-    // ret_val = send(fd, DATA_BUFFER, sizeof(DATA_BUFFER), 0);
-    // printf("Successfully sent data (len %d bytes): %s\n", ret_val, DATA_BUFFER);
-
-    // char buf[5000];
-    // ret_val = recv(fd, buf, 5000, 0);
-    // printf("FROM SERVER: %s\n", buf);
-}
-
-int request_chopstick(int chopstick)
-{
-    char msg[BUFFER_LEN];
-    sprintf(msg, "Q;%d;", chopstick);
-    print_log("Requesting chopstick: %s\n", msg);
-    // err = write(sock_write, msg, sizeof(msg));
-    err = send(sock_write, msg, sizeof(msg), 0);
-    check_syscall_err(err, "chopstick err");
-    return -1;
-
-    err = recv(sock_write, buffer, sizeof(buffer), 0);
+    err = read(sock_write, buffer, sizeof(buffer));
     check_syscall_err(err, "get_response_chopstick err");
     print_log("Got response for chopstick: %s\n", buffer);
     return atoi(buffer);
 }
+
+void request_chopstick(int chopstick)
+{
+    char msg[BUFFER_LEN];
+    sprintf(msg, "Q;%d;", chopstick);
+    print_log("Requesting chopstick: %s\n", msg);
+    err = write(sock_write, msg, sizeof(msg));
+    check_syscall_err(err, "chopstick err");
+}
+
+// TODO - reqest_chopstick(int chopstick) -- to reduce code duplication
+// void request_right_chopstick()
+// {
+//     char msg[BUFFER_LEN];
+//     sprintf(msg, "Q;%d;", right_chopstick);
+//     print_log("Requesting right chopstick: %s\n", msg);
+//     err = write(sock_write, msg, sizeof(msg));
+//     check_syscall_err(err, "right chopstick err");
+// }
 
 void release_chopstick(int chopstick)
 {
     char msg[BUFFER_LEN];
     sprintf(msg, "R;%d;", chopstick);
     print_log("Releasing chopstick: %s\n", msg);
-    // err = write(sock_write, msg, sizeof(msg));
-    err = send(sock_write, msg, sizeof(msg), 0);
+    err = write(sock_write, msg, sizeof(msg));
     check_syscall_err(err, "release chopstick err");
 }
+
+// void release_left_chopstick()
+// void release_right_chopstick()
+// void release_chopsticks()

@@ -41,11 +41,11 @@ int main(int argc, char *argv[])
             print_log("Exec phil ID: %d, Self read port: %d, Next write port: %d\n", phil_id, read_ports[i], write_ports[i]);
             if (i == 0) // This one should start election
             {
-                err = execl("./bin/philosopher", "philosopher", phil_id_char, self_read_port_char, next_write_port_char, should_start_election_char, (char *)NULL);
+                err = execl("./philosopher", "philosopher", phil_id_char, self_read_port_char, next_write_port_char, should_start_election_char, (char *)NULL);
             }
             else
             {
-                err = execl("./bin/philosopher", "philosopher", phil_id_char, self_read_port_char, next_write_port_char, should_not_start_election_char, (char *)NULL);
+                err = execl("./philosopher", "philosopher", phil_id_char, self_read_port_char, next_write_port_char, should_not_start_election_char, (char *)NULL);
             }
 
             if (err == -1)
