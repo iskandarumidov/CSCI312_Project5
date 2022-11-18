@@ -1,9 +1,9 @@
-all: kp clean current
+all: kp current
 
 current:
+	cc -Wno-macro-redefined server.c -o server
+	cc -Wno-macro-redefined philosopher.c -o philosopher
 	cc -Wno-macro-redefined starter.c -o starter
-	cc -Wno-macro-redefined philosopher.c -o philosopher -pthread
-	cc -Wno-macro-redefined coordinator.c -o coordinator -pthread
 
 kp:
 	-kill $$(lsof -t -i :31200 -s TCP:LISTEN)
@@ -13,10 +13,7 @@ kp:
 	-kill $$(lsof -t -i :31204 -s TCP:LISTEN)
 	-kill $$(lsof -t -i :31205 -s TCP:LISTEN)
 
-netstat:
-	netstat -anvp tcp | awk 'NR<3 || /LISTEN/'
-
 clean:
-	rm -f ./starter
+	rm -f ./server
 	rm -f ./philosopher
-	rm -f ./coordinator
+	rm -f ./starter

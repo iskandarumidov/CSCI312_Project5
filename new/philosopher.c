@@ -161,42 +161,43 @@ int main(int argc, char *argv[])
     // If I'm here, it means I'm not the coordinator
     // Need to replace next port by coordinator's port?
     setup_chopsticks();
-    print_log("MY CHOPSTICKS: left - %d, right - %d\n", left_chopstick, right_chopstick);
+    // print_log("MY CHOPSTICKS: left - %d, right - %d\n", left_chopstick, right_chopstick);
 
     // TODO - implement algorithm of getting one chopstick at a time. Log attempts to get chopstick and successes
 
     sleep(10);
+    // BUG - need to think to contact coordinator for all 5 phil
     // Start communication with coordinator only after ring algo completely done
     setup_client_with_port(coordinator_port);
-    int i = 0;
-    for (i = 0; i < 1; i++) // TODO - change to while(1)
-    {
-        think();
+    // int i = 0;
+    // for (i = 0; i < 1; i++) // TODO - change to while(1)
+    // {
+    think();
 
-        // request_left_chopstick();
-        request_chopstick(left_chopstick);
-        has_left_chopstick = get_response_chopstick();
-        print_log("HAS LEFT CHOPSTICK: %d\n", has_left_chopstick);
-        if (has_left_chopstick)
+    // request_left_chopstick();
+    request_chopstick(left_chopstick);
+    has_left_chopstick = get_response_chopstick();
+    print_log("HAS LEFT CHOPSTICK: %d\n", has_left_chopstick);
+    if (has_left_chopstick)
+    {
+        request_chopstick(right_chopstick);
+        has_right_chopstick = get_response_chopstick();
+        print_log("HAS RIGHT CHOPSTICK: %d\n", has_right_chopstick);
+        if (has_right_chopstick)
         {
-            request_chopstick(right_chopstick);
-            has_right_chopstick = get_response_chopstick();
-            print_log("HAS RIGHT CHOPSTICK: %d\n", has_right_chopstick);
-            if (has_right_chopstick)
-            {
-                eat();
-                release_chopstick(left_chopstick);
-                has_left_chopstick = 0;
-                release_chopstick(right_chopstick);
-                has_left_chopstick = 1;
-            }
-            else
-            {
-                release_chopstick(left_chopstick);
-                has_left_chopstick = 0;
-            }
+            // eat();
+            release_chopstick(left_chopstick);
+            has_left_chopstick = 0;
+            release_chopstick(right_chopstick);
+            has_left_chopstick = 1;
+        }
+        else
+        {
+            release_chopstick(left_chopstick);
+            has_left_chopstick = 0;
         }
     }
+    // }
 
     // char test_to_send[BUFFER_LEN];
     // sprintf(test_to_send, "%d", 1);
@@ -487,14 +488,14 @@ void setup_client_with_port(int port)
 
 void think()
 {
-    int think_time = get_random_in_range(1200000, 3000000); // 1.2s - 3s
+    int think_time = get_random_in_range(1200000, 5000000); // 1.2s - 4s
     print_log("Thinking for %.2f\n", think_time / (float)1000000);
     usleep(think_time);
 }
 
 void eat()
 {
-    int eat_time = get_random_in_range(1200000, 3000000); // 1.2s - 3s
+    int eat_time = get_random_in_range(1200000, 5000000); // 1.2s - 4s
     print_log("Eating for %.2f\n", eat_time / (float)1000000);
     usleep(eat_time);
 }
