@@ -563,7 +563,7 @@ int get_response_chopstick()
 int request_chopstick(int chopstick)
 {
     char msg[BUFFER_LEN];
-    sprintf(msg, "Q;%d;", chopstick);
+    sprintf(msg, "Q;%d;%d;", id, chopstick);
     print_log("Requesting chopstick: %s\n", msg);
     // err = write(sock_write, msg, sizeof(msg));
     err = send(sock_write, msg, sizeof(msg), 0);
@@ -579,7 +579,7 @@ int request_chopstick(int chopstick)
 void release_chopstick(int chopstick)
 {
     char msg[BUFFER_LEN];
-    sprintf(msg, "R;%d;", chopstick);
+    sprintf(msg, "R;%d;%d;", id, chopstick);
     print_log("Releasing chopstick: %s\n", msg);
     // err = write(sock_write, msg, sizeof(msg));
     err = send(sock_write, msg, sizeof(msg), 0);

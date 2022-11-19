@@ -27,6 +27,10 @@ void extract_ids();
 int create_tcp_server_socket();
 void print_conn_arr();
 
+int incoming_id;
+int incoming_chopstick;
+void extract_incoming_id(char str[]);
+
 // TODO - still haven't touched queue and shared var
 
 int main(int argc, char *argv[])
@@ -42,6 +46,7 @@ int main(int argc, char *argv[])
     int server_fd, new_fd, ret_val, i;
     socklen_t addrlen;
     char buf[DATA_BUFFER];
+    char buf2[DATA_BUFFER];
 
     server_fd = create_tcp_server_socket();
     check_syscall_err(server_fd, "Failed to create a server");
@@ -115,12 +120,19 @@ int main(int argc, char *argv[])
                     }
                     if (ret_val > 0)
                     {
-                        printf("Received data (len %d bytes, fd: %d): %s\n", ret_val, all_connections[i], buf);
+                        // printf("Received data (len %d bytes, fd: %d): %s\n", ret_val, all_connections[i], buf);
+                        sprintf(buf2, "%s", buf);
+                        extract_incoming_id(buf2);
                         if (buf[0] == 'Q')
                         {
+                            // if(queue_is_empty()){
+
+                            // }
                             int wr_len = send(all_connections[i], "1", DATA_BUFFER, 0);
-                            printf("WROTE\n");
                             print_conn_arr();
+                        }
+                        else
+                        {
                         }
                     }
                     if (ret_val == -1)
@@ -159,6 +171,14 @@ void extract_ids()
         token = strtok(NULL, SEPARATORS);
         i++;
     }
+}
+
+void extract_incoming_id(char str[])
+{
+    char *token = strtok(str, SEPARATORS);
+    incoming_id = atoi(token);
+    token = strtok(NULL, SEPARATORS);
+    incoming_chopstick = atoi(token);
 }
 
 int create_tcp_server_socket()
