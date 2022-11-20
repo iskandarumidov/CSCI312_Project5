@@ -16,7 +16,10 @@ kp:
 netstat:
 	netstat -anvp tcp | awk 'NR<3 || /LISTEN/'
 
+start:
+	./bin/starter
+
 clean:
-	rm -f ./starter
-	rm -f ./philosopher
-	rm -f ./coordinator
+	rm -f ./bin/starter
+	rm -f ./bin/philosopher
+	rm -f ./bin/coordinator

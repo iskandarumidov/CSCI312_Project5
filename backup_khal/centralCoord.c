@@ -1,14 +1,5 @@
 #include "soc.h"
-#define N 5
-
-typedef struct Philosopher
-{
-	int ID;
-	int leftToken;
-	int rightToken;
-	int isEat;
-	int isThink;
-} Philosopher;
+#include "philosopher.h"
 
 void enqueue(int *array, int input);
 void dequeue(int *array, int location);

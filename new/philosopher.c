@@ -1,4 +1,5 @@
 #include "soc.h"
+// #include <pthread.h>
 // TODO - try changing printf in print_log to fprintf(err) for low latency? no buffering?
 void set_coordinator_next(char str[]);
 void setup_server();
@@ -9,12 +10,10 @@ void append_cur_id();
 void setup_chopsticks();
 void think();
 void eat();
-// void request_left_chopstick();
-// void request_right_chopstick();
 int request_chopstick(int chopstick);
-// int get_response_left_chopstick();
-int get_response_chopstick();
 void release_chopstick(int chopstick);
+void send_i_message();
+// void *process(void *arg);
 
 int id = -1;
 int coordinator = -1;
@@ -47,6 +46,11 @@ char central_message[BUFFER_LEN] = "Q;";
 
 int is_eating = 0;
 int is_thinking = 0;
+
+int got_x_from_coordinator = 0;
+char buffer_x[BUFFER_LEN];
+// pthread_t thread;
+// pthread_mutex_t lock;
 
 #define print_log(f_, ...) printf("[%s] PHIL ID: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
@@ -169,41 +173,72 @@ int main(int argc, char *argv[])
     // BUG - need to think to contact coordinator for all 5 phil
     // Start communication with coordinator only after ring algo completely done
     setup_client_with_port(coordinator_port);
-    // int i = 0;
-    // for (i = 0; i < 1; i++) // TODO - change to while(1)
-    // {
-    think();
+    // think(); // BUG - might need to uncomment
 
     // request_left_chopstick();
-    // while (1)
+
+    // GOOD CODE HERE
+    send_i_message();
+    sleep(1);
+    think();
+
+    // TODO - listen for X here?
+    /*
+    if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+        print_log("mutex init has failed\n");
+        return 1;
+    }
+
+    err = pthread_create(&thread, NULL, &process, NULL);
+    if (err != 0)
+        printf("\nThread can't be created :[%s]", strerror(err));
+    pthread_detach(thread);*/
+    // TODO - END LISTEN FOR X
+
     int i = 0;
+    // while (1)
     for (i = 0; i < 10; i++)
     {
-        has_left_chopstick = request_chopstick(left_chopstick);
-        if (has_left_chopstick)
+        if (is_eating == 0 && is_thinking == 0)
         {
-            print_log("Got left chopstick\n");
-            has_right_chopstick = request_chopstick(right_chopstick);
-            if (has_right_chopstick)
+            print_log("I want to eat\n");
+            has_left_chopstick = request_chopstick(left_chopstick);
+            if (has_left_chopstick)
             {
-                print_log("Got right chopstick\n");
-                eat();
-                release_chopstick(left_chopstick);
-                release_chopstick(right_chopstick);
+                print_log("Got left chopstick\n");
+                has_right_chopstick = request_chopstick(right_chopstick);
+                if (has_right_chopstick)
+                {
+                    print_log("Got right chopstick\n");
+                    eat();
+                    release_chopstick(left_chopstick);
+                    release_chopstick(right_chopstick);
+                }
+                else
+                {
+                    print_log("Failed to get right chopstick\n");
+                    release_chopstick(left_chopstick);
+                    // while (1)
+                    // {
+                    // }
+                    // BUG - should not attempt eating again if failed to get right chopstick
+                }
             }
             else
             {
-                print_log("Did not get right chopstick\n");
-                release_chopstick(left_chopstick);
+
+                print_log("Failed to get left chopstick\n");
+                // while (1)
+                // {
+                // }
+                // BUG - should not attempt eating again if failed to get left chopstick
             }
         }
-        else
-        {
-            print_log("Failed to get left chopstick\n");
-        }
-
         think();
+        // BUG - need to implement listening for X somewhere
     }
+    // GOOD CODE HERE
 
     // has_left_chopstick = request_chopstick(left_chopstick);
     // think();
@@ -250,7 +285,7 @@ int main(int argc, char *argv[])
 
     // TODO - might need to use threads like Hamnes said - one thread listens for messages
     // TODO - writers to coord are in MAIN, readers are in thread
-
+    // pthread_mutex_destroy(&lock);
     return EXIT_SUCCESS;
 }
 
@@ -530,34 +565,22 @@ void setup_client_with_port(int port)
 
 void think()
 {
-    int think_time = get_random_in_range(1200000, 5000000); // 1.2s - 4s
+    int think_time = real_get_random_in_range(1200000, 5000000); // 1.2s - 4s   // BUG - real_get_random_in_range
     print_log("Thinking for %.2f\n", think_time / (float)1000000);
+    is_thinking = 1;
     usleep(think_time);
+    is_thinking = 0;
+    print_log("=== DONE THINKING ===\n");
 }
 
 void eat()
 {
-    int eat_time = get_random_in_range(1200000, 5000000); // 1.2s - 4s
+    int eat_time = real_get_random_in_range(1200000, 5000000); // 1.2s - 4s // BUG - real_get_random_in_range
     print_log("Eating for %.2f\n", eat_time / (float)1000000);
+    is_eating = 1;
     usleep(eat_time);
-}
-
-int get_response_chopstick()
-{
-    return -1;
-    // err = read(sock_write, buffer, sizeof(buffer));
-
-    // err = recv(sock_write, buffer, sizeof(buffer), 0);
-    // check_syscall_err(err, "get_response_chopstick err");
-    // print_log("Got response for chopstick: %s\n", buffer);
-    // return atoi(buffer);
-
-    // ret_val = send(fd, DATA_BUFFER, sizeof(DATA_BUFFER), 0);
-    // printf("Successfully sent data (len %d bytes): %s\n", ret_val, DATA_BUFFER);
-
-    // char buf[5000];
-    // ret_val = recv(fd, buf, 5000, 0);
-    // printf("FROM SERVER: %s\n", buf);
+    is_eating = 0;
+    print_log("=== DONE EATING ===\n");
 }
 
 int request_chopstick(int chopstick)
@@ -565,15 +588,27 @@ int request_chopstick(int chopstick)
     char msg[BUFFER_LEN];
     sprintf(msg, "Q;%d;%d;", id, chopstick);
     print_log("Requesting chopstick: %s\n", msg);
-    // err = write(sock_write, msg, sizeof(msg));
     err = send(sock_write, msg, sizeof(msg), 0);
     check_syscall_err(err, "chopstick err");
-    return -1;
+    // return -1;
 
-    err = recv(sock_write, buffer, sizeof(buffer), 0);
+    char recv_buffer[2];
+    err = recv(sock_write, recv_buffer, 2, 0); // BUG - when Y has 1 bytes to read, extra garbage is appended?
+    // err = recv(sock_write, buffer, sizeof(buffer), 0);
     check_syscall_err(err, "get_response_chopstick err");
-    print_log("Got response for chopstick: %s\n", buffer);
-    return atoi(buffer);
+    print_log("Got response for chopstick: %s\n", recv_buffer);
+
+    // if ((strncmp(recv_buffer, "Y", 1)) == 0)
+    if (recv_buffer[0] == 'Y')
+    {
+        return 1;
+        // print_log("Detected word GAME OVER from server\n");
+    }
+    else
+    {
+        return 0;
+    }
+    // return atoi(buffer);
 }
 
 void release_chopstick(int chopstick)
@@ -581,7 +616,60 @@ void release_chopstick(int chopstick)
     char msg[BUFFER_LEN];
     sprintf(msg, "R;%d;%d;", id, chopstick);
     print_log("Releasing chopstick: %s\n", msg);
-    // err = write(sock_write, msg, sizeof(msg));
     err = send(sock_write, msg, sizeof(msg), 0);
     check_syscall_err(err, "release chopstick err");
 }
+
+void send_i_message()
+{
+    char msg[BUFFER_LEN];
+    sprintf(msg, "I;%d;%d;%d;", id, left_chopstick, right_chopstick);
+    print_log("Sending I message: %s\n", msg);
+    err = send(sock_write, msg, sizeof(msg), 0);
+    check_syscall_err(err, "send i message err");
+}
+
+// void *process(void *arg)
+// {
+//     pthread_mutex_lock(&lock);
+//     printf("Job has started\n");
+
+//     err = read(sock_fd, buffer, sizeof(buffer));
+//     printf("FROM COORDINATOR (IN THREAD): %s\n", buffer);
+
+//     printf("Job has finished\n");
+//     pthread_mutex_unlock(&lock);
+
+//     return NULL;
+// }
+
+// void *process(void *arg)
+// {
+//     unsigned int newsocket_in_thread = *((unsigned int *)arg);
+//     while (1)
+//     {
+//         pthread_mutex_lock(&lock);
+//         sprintf(buffer_x, "");
+//         // err = read(newsocket_in_thread, buffer, sizeof(buffer));
+//         err = recv(newsocket_in_thread, buffer_x, sizeof(buffer_x), 0);
+//         check_syscall_err(err, "get_response_chopstick err");
+//         print_log("IN THREAD: X: %s\n", buffer_x);
+//         if (buffer_x[0] == 'X')
+//         {
+//         }
+//         // if ()
+//         // if (err == 0)
+//         // {
+//         //     print_log("Client disconnected\n");
+//         //     break;
+//         //     // exit(EXIT_SUCCESS);
+//         // }
+//         // check_syscall_err(err, "thread read failed");
+//         // print_log("FROM PHILOSOPHER (IN THREAD): %s\n", buffer);
+//         pthread_mutex_unlock(&lock);
+
+//         err = write(newsocket_in_thread, "1", sizeof("1")); // BUG - need to respond to X?
+//         check_syscall_err(err, "write coord error");
+//     }
+//     return NULL;
+// }

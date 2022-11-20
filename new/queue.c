@@ -1,13 +1,14 @@
 // #include <stdio.h>
 // #include <stdlib.h>
 
-#define QUEUE_SIZE 10
+#define QUEUE_SIZE 30
 
 void enqueue(int insert_item);
-void dequeue();
+int dequeue();
 void display_queue();
 int queue_size();
 int queue_is_empty();
+int peek();
 
 int queue_array[QUEUE_SIZE];
 int queue_rear = -1;
@@ -62,17 +63,33 @@ void enqueue(int insert_item)
     }
 }
 
-void dequeue()
+int dequeue()
+{
+    int res = -1;
+    if (queue_front == -1 || queue_front > queue_rear)
+    {
+        printf("Underflow \n");
+        // return;
+    }
+    else
+    {
+        res = queue_array[queue_front];
+        // printf("Element deleted from the Queue: %d\n", queue_array[queue_front]);
+        queue_front = queue_front + 1;
+    }
+    return res;
+}
+
+int peek()
 {
     if (queue_front == -1 || queue_front > queue_rear)
     {
         printf("Underflow \n");
-        return;
+        return -1;
     }
     else
     {
-        printf("Element deleted from the Queue: %d\n", queue_array[queue_front]);
-        queue_front = queue_front + 1;
+        return queue_array[queue_front];
     }
 }
 

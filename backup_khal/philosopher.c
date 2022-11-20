@@ -1,16 +1,5 @@
 #include "soc.h"
-// #include "philosopher.h"
-
-#define N 5
-
-typedef struct Philosopher
-{
-	int ID;
-	int leftToken;
-	int rightToken;
-	int isEat;
-	int isThink;
-} Philosopher;
+#include "philosopher.h"
 
 // main program
 int main(int argc, char *argv[])
