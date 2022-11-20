@@ -14,6 +14,7 @@ int request_chopstick(int chopstick);
 void release_chopstick(int chopstick);
 void send_i_message();
 int receive_x_from_coordinator();
+void release_both_chopsticks(int left, int right);
 // void *process(void *arg);
 
 int id = -1;
@@ -214,8 +215,9 @@ int main(int argc, char *argv[])
                 {
                     print_log("Got right chopstick\n");
                     eat();
-                    release_chopstick(left_chopstick);
-                    release_chopstick(right_chopstick);
+                    // release_chopstick(left_chopstick);
+                    // release_chopstick(right_chopstick);
+                    release_both_chopsticks(left_chopstick, right_chopstick);
                 }
                 else
                 {
@@ -248,6 +250,7 @@ int main(int argc, char *argv[])
                     print_log("Got X from coordinator\n");
                     eat();
                     release_chopstick(left_chopstick);
+                    sleep(1); // BUG - need to release 2 at same time? new function?
                     release_chopstick(right_chopstick);
                 }
                 // break;
@@ -635,6 +638,15 @@ void release_chopstick(int chopstick)
     print_log("Releasing chopstick: %s\n", msg);
     err = send(sock_write, msg, sizeof(msg), 0);
     check_syscall_err(err, "release chopstick err");
+}
+
+void release_both_chopsticks(int left, int right)
+{
+    char msg[BUFFER_LEN];
+    sprintf(msg, "W;%d;%d;%d;", id, left, right);
+    print_log("Releasing BOTH chopstick: %s\n", msg);
+    err = send(sock_write, msg, sizeof(msg), 0);
+    check_syscall_err(err, "release both chopsticks err");
 }
 
 int receive_x_from_coordinator()

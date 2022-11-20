@@ -172,9 +172,11 @@ int main(int argc, char *argv[])
                                 // int wr_len = send(all_connections[i], "N", DATA_BUFFER, 0);
                                 check_syscall_err(wr_len, "Failed to send 0 to philosopher");
                                 enqueue(all_connections[i]);
+                                display_queue();
                             }
                             print_log("CHOPSTICKS: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
-                            print_log("QUEUE: %d %d %d %d %d %d %d %d %d\n", queue_array[0], queue_array[1], queue_array[2], queue_array[3], queue_array[4], queue_array[5], queue_array[6], queue_array[7], queue_array[8]);
+                            display_queue();
+                            // print_log("QUEUE: %d %d %d %d %d %d %d %d %d\n", queue_array[0], queue_array[1], queue_array[2], queue_array[3], queue_array[4], queue_array[5], queue_array[6], queue_array[7], queue_array[8]);
                         }
                         else if (buf[0] == 'R') // BUG - I might need to release 2 chopsticks at once!! will need to change client too
                         {
@@ -193,7 +195,8 @@ int main(int argc, char *argv[])
                                 int my_left_chopstick = fd_to_chopstick[fd_to_run][0];
                                 int my_right_chopstick = fd_to_chopstick[fd_to_run][1];
                                 print_log("CHECK IF BOTH CHOPSTICKS ARE READY FOR FD: %d, left - %d, right - %d\n", fd_to_run, my_left_chopstick, my_right_chopstick);
-                                if (my_left_chopstick == 1 && my_right_chopstick == 1)
+                                // if (my_left_chopstick == 1 && my_right_chopstick == 1)
+                                if (chopsticks[my_left_chopstick] == 1 && chopsticks[my_right_chopstick] == 1)
                                 {
                                     chopsticks[my_left_chopstick] = 0;
                                     chopsticks[my_right_chopstick] = 0;
@@ -208,6 +211,7 @@ int main(int argc, char *argv[])
                                     // int wr_len = send(fd_to_run, "1", DATA_BUFFER, 0); // TODO send X
                                     check_syscall_err(err, "Failed to send X to philosopher"); // BUG - isEat, isThink - on client side, to make sure don't request the same ones? or other ones while eating/thinking
                                     dequeue();
+                                    display_queue();
                                 }
                                 else
                                 {
@@ -218,7 +222,60 @@ int main(int argc, char *argv[])
                             // int my_left_chopstick = fd_to_chopstick[all_connections[i]][0];
                             // int my_right_chopstick = fd_to_chopstick[all_connections[i]][1];
                             print_log("CHOPSTICKS: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
-                            print_log("QUEUE: %d %d %d %d %d %d %d %d %d\n", queue_array[0], queue_array[1], queue_array[2], queue_array[3], queue_array[4], queue_array[5], queue_array[6], queue_array[7], queue_array[8]);
+                            display_queue();
+                            // print_log("QUEUE: %d %d %d %d %d %d %d %d %d\n", queue_array[0], queue_array[1], queue_array[2], queue_array[3], queue_array[4], queue_array[5], queue_array[6], queue_array[7], queue_array[8]);
+                        }
+                        else if (buf[0] == 'W') // BUG - I might need to release 2 chopsticks at once!! will need to change client too
+                        {
+                            print_log("RECEIVED W MESSAGE: %s\n", buf);
+                            char *token = strtok(buf2, SEPARATORS);
+                            incoming_id = atoi(token);
+                            token = strtok(NULL, SEPARATORS);
+                            int incoming_left_chopstick = atoi(token);
+                            token = strtok(NULL, SEPARATORS);
+                            int incoming_right_chopstick = atoi(token);
+
+                            print_log("CHOPSTICKS BEFORE W: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
+                            chopsticks[incoming_left_chopstick] = 1;
+                            chopsticks[incoming_right_chopstick] = 1;
+                            print_log("CHOPSTICKS AFTER W: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
+
+                            // NEED TO UNCOMMENT FOR X
+                            int fd_to_run = peek();
+                            if (fd_to_run > 0)
+                            {
+                                int my_left_chopstick = fd_to_chopstick[fd_to_run][0];
+                                int my_right_chopstick = fd_to_chopstick[fd_to_run][1];
+                                print_log("CHECK IF BOTH CHOPSTICKS ARE READY FOR FD: %d, left - %d, right - %d\n", fd_to_run, my_left_chopstick, my_right_chopstick);
+                                // if (my_left_chopstick == 1 && my_right_chopstick == 1)
+                                if (chopsticks[my_left_chopstick] == 1 && chopsticks[my_right_chopstick] == 1)
+                                {
+                                    chopsticks[my_left_chopstick] = 0;
+                                    chopsticks[my_right_chopstick] = 0;
+                                    print_log("SENDING X - GIVING CHOPSTICKS %d AND %d TO PHILOSOPHER %d\n", my_left_chopstick, my_right_chopstick, incoming_id);
+
+                                    char msg[BUFFER_LEN];
+                                    // sprintf(msg, "X;%d;%d;", id, chopstick);
+                                    // sprintf(msg, "X;");
+                                    err = send(fd_to_run, "X", 1, 0);
+                                    // err = send(fd_to_run, msg, sizeof(msg), 0);
+
+                                    // int wr_len = send(fd_to_run, "1", DATA_BUFFER, 0); // TODO send X
+                                    check_syscall_err(err, "Failed to send X to philosopher"); // BUG - isEat, isThink - on client side, to make sure don't request the same ones? or other ones while eating/thinking
+                                    dequeue();
+                                    display_queue();
+                                }
+                                else
+                                {
+                                    print_log("BOTH CHOPSTICKS NOT READY\n");
+                                }
+                            }
+
+                            // int my_left_chopstick = fd_to_chopstick[all_connections[i]][0];
+                            // int my_right_chopstick = fd_to_chopstick[all_connections[i]][1];
+                            print_log("CHOPSTICKS: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
+                            display_queue();
+                            // print_log("QUEUE: %d %d %d %d %d %d %d %d %d\n", queue_array[0], queue_array[1], queue_array[2], queue_array[3], queue_array[4], queue_array[5], queue_array[6], queue_array[7], queue_array[8]);
                         }
                     }
                     if (ret_val == -1)

@@ -1,5 +1,8 @@
 // #include <stdio.h>
 // #include <stdlib.h>
+#include "soc.h"
+
+// #define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
 #define QUEUE_SIZE 30
 
@@ -10,30 +13,35 @@ int queue_size();
 int queue_is_empty();
 int peek();
 
+void wrong_pring_array();
+
 int queue_array[QUEUE_SIZE];
 int queue_rear = -1;
 int queue_front = -1;
 
 // int main()
 // {
-// dequeue();
-// printf("EMPTY?: %d\n", queue_is_empty());
-// printf("SIZE: %d\n", queue_size());
-// enqueue(1);
-// printf("EMPTY?: %d\n", queue_is_empty());
-// enqueue(2);
-// enqueue(3);
-// printf("SIZE: %d\n", queue_size());
-// display_queue();
-// dequeue();
-// printf("SIZE: %d\n", queue_size());
-// display_queue();
-// dequeue();
-// printf("SIZE: %d\n", queue_size());
-// display_queue();
-// dequeue();
-// printf("SIZE: %d\n", queue_size());
-// printf("EMPTY?: %d\n", queue_is_empty());
+//     dequeue();
+//     printf("EMPTY?: %d\n", queue_is_empty());
+//     printf("SIZE: %d\n", queue_size());
+//     enqueue(1);
+//     printf("EMPTY?: %d\n", queue_is_empty());
+//     enqueue(2);
+//     enqueue(3);
+//     printf("SIZE: %d\n", queue_size());
+//     display_queue();
+//     wrong_pring_array();
+//     dequeue();
+//     printf("SIZE: %d\n", queue_size());
+//     display_queue();
+//     wrong_pring_array();
+//     dequeue();
+//     printf("SIZE: %d\n", queue_size());
+//     display_queue();
+//     wrong_pring_array();
+//     dequeue();
+//     printf("SIZE: %d\n", queue_size());
+//     printf("EMPTY?: %d\n", queue_is_empty());
 // }
 
 int queue_size()
@@ -100,9 +108,19 @@ void display_queue()
         printf("Empty Queue \n");
     else
     {
-        printf("Queue: \n");
+        printf("Queue: ");
         for (int i = queue_front; i <= queue_rear; i++)
             printf("%d ", queue_array[i]);
         printf("\n");
     }
+}
+
+void wrong_pring_array()
+{
+    int i = 0;
+    for (i = 0; i < 10; i++)
+    {
+        printf("%d ", queue_array[i]);
+    }
+    printf("\n");
 }
