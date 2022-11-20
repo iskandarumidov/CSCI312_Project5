@@ -186,28 +186,34 @@ int main(int argc, char *argv[])
 
                             chopsticks[incoming_chopstick] = 1;
 
-                            /* // NEED TO UNCOMMENT FOR X
+                            // NEED TO UNCOMMENT FOR X
                             int fd_to_run = peek();
                             if (fd_to_run > 0)
                             {
                                 int my_left_chopstick = fd_to_chopstick[fd_to_run][0];
                                 int my_right_chopstick = fd_to_chopstick[fd_to_run][1];
+                                print_log("CHECK IF BOTH CHOPSTICKS ARE READY FOR FD: %d, left - %d, right - %d\n", fd_to_run, my_left_chopstick, my_right_chopstick);
                                 if (my_left_chopstick == 1 && my_right_chopstick == 1)
                                 {
                                     chopsticks[my_left_chopstick] = 0;
                                     chopsticks[my_right_chopstick] = 0;
-                                    print_log("GIVING CHOPSTICKS %d AND %d TO PHILOSOPHER %d\n", my_left_chopstick, my_right_chopstick, incoming_id);
+                                    print_log("SENDING X - GIVING CHOPSTICKS %d AND %d TO PHILOSOPHER %d\n", my_left_chopstick, my_right_chopstick, incoming_id);
 
                                     char msg[BUFFER_LEN];
                                     // sprintf(msg, "X;%d;%d;", id, chopstick);
-                                    sprintf(msg, "X;");
-                                    err = send(fd_to_run, msg, sizeof(msg), 0);
+                                    // sprintf(msg, "X;");
+                                    err = send(fd_to_run, "X", 1, 0);
+                                    // err = send(fd_to_run, msg, sizeof(msg), 0);
 
                                     // int wr_len = send(fd_to_run, "1", DATA_BUFFER, 0); // TODO send X
-                                    check_syscall_err(err, "Failed to send 1 to philosopher"); // BUG - isEat, isThink - on client side, to make sure don't request the same ones? or other ones while eating/thinking
+                                    check_syscall_err(err, "Failed to send X to philosopher"); // BUG - isEat, isThink - on client side, to make sure don't request the same ones? or other ones while eating/thinking
                                     dequeue();
                                 }
-                            }*/
+                                else
+                                {
+                                    print_log("BOTH CHOPSTICKS NOT READY\n");
+                                }
+                            }
 
                             // int my_left_chopstick = fd_to_chopstick[all_connections[i]][0];
                             // int my_right_chopstick = fd_to_chopstick[all_connections[i]][1];

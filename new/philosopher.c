@@ -13,6 +13,7 @@ void eat();
 int request_chopstick(int chopstick);
 void release_chopstick(int chopstick);
 void send_i_message();
+int receive_x_from_coordinator();
 // void *process(void *arg);
 
 int id = -1;
@@ -180,7 +181,8 @@ int main(int argc, char *argv[])
     // GOOD CODE HERE
     send_i_message();
     sleep(1);
-    think();
+    real_get_random_in_range(1200000, 5000000);
+    // think();
 
     // TODO - listen for X here?
     /*
@@ -198,7 +200,7 @@ int main(int argc, char *argv[])
 
     int i = 0;
     // while (1)
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < 20; i++)
     {
         if (is_eating == 0 && is_thinking == 0)
         {
@@ -219,8 +221,17 @@ int main(int argc, char *argv[])
                 {
                     print_log("Failed to get right chopstick\n");
                     release_chopstick(left_chopstick);
-                    // while (1)
+                    // while (1) // DO NOT THINK/REQUEST NEW CHOPSTICK IF YOU FAILED. you are added to coordinator queue, just wait for X
                     // {
+                    int got_x = receive_x_from_coordinator();
+                    if (got_x)
+                    {
+                        print_log("Got X from coordinator\n");
+                        eat();
+                        release_chopstick(left_chopstick);
+                        release_chopstick(right_chopstick);
+                    }
+                    // break;
                     // }
                     // BUG - should not attempt eating again if failed to get right chopstick
                 }
@@ -229,8 +240,17 @@ int main(int argc, char *argv[])
             {
 
                 print_log("Failed to get left chopstick\n");
-                // while (1)
+                // while (1) // DO NOT THINK/REQUEST NEW CHOPSTICK IF YOU FAILED. you are added to coordinator queue, just wait for X
                 // {
+                int got_x = receive_x_from_coordinator();
+                if (got_x)
+                {
+                    print_log("Got X from coordinator\n");
+                    eat();
+                    release_chopstick(left_chopstick);
+                    release_chopstick(right_chopstick);
+                }
+                // break;
                 // }
                 // BUG - should not attempt eating again if failed to get left chopstick
             }
@@ -598,17 +618,14 @@ int request_chopstick(int chopstick)
     check_syscall_err(err, "get_response_chopstick err");
     print_log("Got response for chopstick: %s\n", recv_buffer);
 
-    // if ((strncmp(recv_buffer, "Y", 1)) == 0)
     if (recv_buffer[0] == 'Y')
     {
         return 1;
-        // print_log("Detected word GAME OVER from server\n");
     }
     else
     {
         return 0;
     }
-    // return atoi(buffer);
 }
 
 void release_chopstick(int chopstick)
@@ -618,6 +635,23 @@ void release_chopstick(int chopstick)
     print_log("Releasing chopstick: %s\n", msg);
     err = send(sock_write, msg, sizeof(msg), 0);
     check_syscall_err(err, "release chopstick err");
+}
+
+int receive_x_from_coordinator()
+{
+    char recv_buffer[2];                       // BUG - global vars potentially unsafe for threads? Like ERR????
+    err = recv(sock_write, recv_buffer, 2, 0); // BUG - when Y has 1 bytes to read, extra garbage is appended?
+    check_syscall_err(err, "get_response_chopstick err");
+    print_log("Got response for chopstick: %s\n", recv_buffer);
+
+    if (recv_buffer[0] == 'X')
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 void send_i_message()
