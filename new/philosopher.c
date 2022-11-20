@@ -230,8 +230,9 @@ int main(int argc, char *argv[])
                     {
                         print_log("Got X from coordinator\n");
                         eat();
-                        release_chopstick(left_chopstick);
-                        release_chopstick(right_chopstick);
+                        // release_chopstick(left_chopstick);
+                        // release_chopstick(right_chopstick);
+                        release_both_chopsticks(left_chopstick, right_chopstick);
                     }
                     // break;
                     // }
@@ -249,9 +250,10 @@ int main(int argc, char *argv[])
                 {
                     print_log("Got X from coordinator\n");
                     eat();
-                    release_chopstick(left_chopstick);
-                    sleep(1); // BUG - need to release 2 at same time? new function?
-                    release_chopstick(right_chopstick);
+                    // release_chopstick(left_chopstick);
+                    // sleep(1); // BUG - need to release 2 at same time? new function?
+                    // release_chopstick(right_chopstick);
+                    release_both_chopsticks(left_chopstick, right_chopstick);
                 }
                 // break;
                 // }

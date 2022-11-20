@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
                                 {
                                     chopsticks[my_left_chopstick] = 0;
                                     chopsticks[my_right_chopstick] = 0;
-                                    print_log("SENDING X - GIVING CHOPSTICKS %d AND %d TO PHILOSOPHER %d\n", my_left_chopstick, my_right_chopstick, incoming_id);
+                                    print_log("SENDING X - GIVING CHOPSTICKS %d AND %d TO PHILOSOPHER WITH FD %d\n", my_left_chopstick, my_right_chopstick, fd_to_run);
 
                                     char msg[BUFFER_LEN];
                                     // sprintf(msg, "X;%d;%d;", id, chopstick);
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
                                 {
                                     chopsticks[my_left_chopstick] = 0;
                                     chopsticks[my_right_chopstick] = 0;
-                                    print_log("SENDING X - GIVING CHOPSTICKS %d AND %d TO PHILOSOPHER %d\n", my_left_chopstick, my_right_chopstick, incoming_id);
+                                    print_log("SENDING X - GIVING CHOPSTICKS %d AND %d TO PHILOSOPHER %d\n", my_left_chopstick, my_right_chopstick, fd_to_run);
 
                                     char msg[BUFFER_LEN];
                                     // sprintf(msg, "X;%d;%d;", id, chopstick);
