@@ -1,5 +1,4 @@
 #include "soc.h"
-#include "queue.c"
 
 int id = -1;
 int self_read_port = -1;
@@ -36,9 +35,11 @@ int all_connections[MAX_CONNECTIONS];
 
 #define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
+#include "queue.c"
+
 void extract_ids();
 int create_tcp_server_socket();
-void print_conn_arr();
+// void print_conn_arr();
 // void print_chopstick_arr();
 
 int incoming_id;
@@ -331,12 +332,12 @@ int create_tcp_server_socket()
     return fd;
 }
 
-void print_conn_arr()
-{
-    int i;
-    for (i = 0; i < 20; i++)
-    {
-        printf("%d ", all_connections[i]);
-    }
-    printf("\n");
-}
+// void print_conn_arr()
+// {
+//     int i;
+//     for (i = 0; i < 20; i++)
+//     {
+//         printf("%d ", all_connections[i]);
+//     }
+//     printf("\n");
+// }

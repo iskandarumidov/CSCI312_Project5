@@ -1,8 +1,4 @@
-// #include <stdio.h>
-// #include <stdlib.h>
 #include "soc.h"
-
-// #define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
 #define QUEUE_SIZE 30
 
@@ -18,31 +14,6 @@ void wrong_pring_array();
 int queue_array[QUEUE_SIZE];
 int queue_rear = -1;
 int queue_front = -1;
-
-// int main()
-// {
-//     dequeue();
-//     printf("EMPTY?: %d\n", queue_is_empty());
-//     printf("SIZE: %d\n", queue_size());
-//     enqueue(1);
-//     printf("EMPTY?: %d\n", queue_is_empty());
-//     enqueue(2);
-//     enqueue(3);
-//     printf("SIZE: %d\n", queue_size());
-//     display_queue();
-//     wrong_pring_array();
-//     dequeue();
-//     printf("SIZE: %d\n", queue_size());
-//     display_queue();
-//     wrong_pring_array();
-//     dequeue();
-//     printf("SIZE: %d\n", queue_size());
-//     display_queue();
-//     wrong_pring_array();
-//     dequeue();
-//     printf("SIZE: %d\n", queue_size());
-//     printf("EMPTY?: %d\n", queue_is_empty());
-// }
 
 int queue_size()
 {
@@ -73,18 +44,13 @@ void enqueue(int insert_item)
 
 int dequeue()
 {
-    int res = -1;
     if (queue_front == -1 || queue_front > queue_rear)
     {
         printf("Underflow \n");
-        // return;
+        return -1;
     }
-    else
-    {
-        res = queue_array[queue_front];
-        // printf("Element deleted from the Queue: %d\n", queue_array[queue_front]);
-        queue_front = queue_front + 1;
-    }
+    int res = queue_array[queue_front];
+    queue_front = queue_front + 1;
     return res;
 }
 
@@ -95,32 +61,21 @@ int peek()
         printf("Underflow \n");
         return -1;
     }
-    else
-    {
-        return queue_array[queue_front];
-    }
+    return queue_array[queue_front];
 }
 
 void display_queue()
 {
 
     if (queue_front == -1)
-        printf("Empty Queue \n");
+        print_log("Empty Queue\n");
     else
     {
-        printf("Queue: ");
+        char msg[100];
+        sprintf(msg, "Queue is:");
         for (int i = queue_front; i <= queue_rear; i++)
-            printf("%d ", queue_array[i]);
-        printf("\n");
+            sprintf(msg, "%s %d", msg, queue_array[i]);
+        sprintf(msg, "%s\n", msg);
+        print_log("%s", msg);
     }
-}
-
-void wrong_pring_array()
-{
-    int i = 0;
-    for (i = 0; i < 10; i++)
-    {
-        printf("%d ", queue_array[i]);
-    }
-    printf("\n");
 }
