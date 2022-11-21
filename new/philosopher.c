@@ -44,7 +44,6 @@ int has_right_chopstick = 0;
 char election_message[BUFFER_LEN] = "E;";
 char coordinator_message[BUFFER_LEN] = "C;";
 char central_message[BUFFER_LEN] = "Q;";
-// char coordinator_message[BUFFER_LEN] = "C;123;45;6;78;1;";
 
 int is_eating = 0;
 int is_thinking = 0;
@@ -69,7 +68,6 @@ int main(int argc, char *argv[])
         sleep(1); // Wait until readers are ready; might need more than 1 sec
         setup_client();
         append_cur_id();
-        // print_log("Appended String to send: %s\n", election_message);
         err = write(sock_write, election_message, sizeof(election_message));
         check_syscall_err(err, "write error");
         close(sock_write);
@@ -100,7 +98,6 @@ int main(int argc, char *argv[])
         sprintf(coordinator_message, "%s", buffer);
         close(sock_read);
         close(new_sock_read);
-        // print_log("DONE WITH ELECTION STARTER\n");
     }
     else
     {
@@ -112,7 +109,6 @@ int main(int argc, char *argv[])
         print_log("FROM CLIENT: %s\n", buffer);
         sprintf(election_message, "%s", buffer);
         append_cur_id();
-        // print_log("Appended String to send: %s\n", election_message);
         close(sock_read);
         close(new_sock_read);
 
@@ -139,7 +135,6 @@ int main(int argc, char *argv[])
         err = write(sock_write, coordinator_message, sizeof(coordinator_message));
         check_syscall_err(err, "write error");
         close(sock_write);
-        // print_log("DONE WITH NOT ELECTION STARTER\n");
 
         // Now that I have full coordinator message, I am done communicating with peers
 
@@ -147,19 +142,16 @@ int main(int argc, char *argv[])
     }
 
     set_coordinator_next(coordinator_message);
-    // print_log("COORDINATOR: %d, NEXT PORT: %d\n", coordinator, next_write_port);
 
     // BUG - important - need to find port from message
 
     // detect if I am the coordinator
     if (coordinator == id)
     {
-        // print_log("I AM COORDINATOR\n");
         char phil_id_char[BUFFER_LEN];
         sprintf(phil_id_char, "%d", id);
         char self_read_port_char[BUFFER_LEN];
         sprintf(self_read_port_char, "%d", self_read_port);
-        // print_log("PASSING TO COORDINATOR EXEC: %s\n", buffer);
         err = execl("./bin/coordinator", "coordinator", phil_id_char, self_read_port_char, buffer, (char *)NULL);
         check_syscall_err(err, "Execl coordinator failed");
     }
@@ -167,7 +159,6 @@ int main(int argc, char *argv[])
     // If I'm here, it means I'm not the coordinator
     // Need to replace next port by coordinator's port?
     setup_chopsticks();
-    // print_log("MY CHOPSTICKS: left - %d, right - %d\n", left_chopstick, right_chopstick);
 
     // TODO - implement algorithm of getting one chopstick at a time. Log attempts to get chopstick and successes
 
@@ -175,15 +166,10 @@ int main(int argc, char *argv[])
     // BUG - need to think to contact coordinator for all 5 phil
     // Start communication with coordinator only after ring algo completely done
     setup_client_with_port(coordinator_port);
-    // think(); // BUG - might need to uncomment
 
-    // request_left_chopstick();
-
-    // GOOD CODE HERE
     send_i_message();
     sleep(1);
     real_get_random_in_range(1200000, 5000000);
-    // think();
 
     // TODO - listen for X here?
     /*
@@ -215,8 +201,6 @@ int main(int argc, char *argv[])
                 {
                     print_log("Got right chopstick\n");
                     eat();
-                    // release_chopstick(left_chopstick);
-                    // release_chopstick(right_chopstick);
                     release_both_chopsticks(left_chopstick, right_chopstick);
                 }
                 else
@@ -230,12 +214,8 @@ int main(int argc, char *argv[])
                     {
                         print_log("Got X from coordinator\n");
                         eat();
-                        // release_chopstick(left_chopstick);
-                        // release_chopstick(right_chopstick);
                         release_both_chopsticks(left_chopstick, right_chopstick);
                     }
-                    // break;
-                    // }
                     // BUG - should not attempt eating again if failed to get right chopstick
                 }
             }
@@ -250,63 +230,14 @@ int main(int argc, char *argv[])
                 {
                     print_log("Got X from coordinator\n");
                     eat();
-                    // release_chopstick(left_chopstick);
-                    // sleep(1); // BUG - need to release 2 at same time? new function?
-                    // release_chopstick(right_chopstick);
                     release_both_chopsticks(left_chopstick, right_chopstick);
                 }
-                // break;
-                // }
                 // BUG - should not attempt eating again if failed to get left chopstick
             }
         }
         think();
         // BUG - need to implement listening for X somewhere
     }
-    // GOOD CODE HERE
-
-    // has_left_chopstick = request_chopstick(left_chopstick);
-    // think();
-    // has_left_chopstick = request_chopstick(left_chopstick);
-    // think();
-    // get_response_chopstick();
-
-    /*
-
-        request_chopstick(left_chopstick);
-        has_left_chopstick = get_response_chopstick();
-        print_log("HAS LEFT CHOPSTICK: %d\n", has_left_chopstick);
-        if (has_left_chopstick)
-        {
-            request_chopstick(right_chopstick);
-            has_right_chopstick = get_response_chopstick();
-            print_log("HAS RIGHT CHOPSTICK: %d\n", has_right_chopstick);
-            if (has_right_chopstick)
-            {
-                // eat();
-                release_chopstick(left_chopstick);
-                has_left_chopstick = 0;
-                release_chopstick(right_chopstick);
-                has_left_chopstick = 1;
-            }
-            else
-            {
-                release_chopstick(left_chopstick);
-                has_left_chopstick = 0;
-            }
-        }*/
-
-    // }
-
-    // char test_to_send[BUFFER_LEN];
-    // sprintf(test_to_send, "%d", 1);
-    // err = write(sock_write, test_to_send, sizeof(test_to_send));
-    // check_syscall_err(err, "write error after coord decided");
-
-    // TRY TO KEEP OPEN? // BUG
-    // close(sock_write);
-
-    // print_log("DONE WITH NOT ELECTION STARTER\n");
 
     // TODO - might need to use threads like Hamnes said - one thread listens for messages
     // TODO - writers to coord are in MAIN, readers are in thread
@@ -552,7 +483,6 @@ void setup_server()
 
     check_syscall_err(bind(sock_read, (struct sockaddr *)&serv_adr, sizeof(serv_adr)), "Binding to socket failed");
     check_syscall_err(listen(sock_read, MAX_CLIENT_QUEUE), "Listening to socket failed");
-    // print_log("Node listening on port: %d\n", self_read_port);
 
     clientLength = sizeof(client_adr);
     new_sock_read = accept(sock_read, (struct sockaddr *)&client_adr, &clientLength);
@@ -615,11 +545,9 @@ int request_chopstick(int chopstick)
     print_log("Requesting chopstick: %s\n", msg);
     err = send(sock_write, msg, sizeof(msg), 0);
     check_syscall_err(err, "chopstick err");
-    // return -1;
 
     char recv_buffer[2];
     err = recv(sock_write, recv_buffer, 2, 0); // BUG - when Y has 1 bytes to read, extra garbage is appended?
-    // err = recv(sock_write, buffer, sizeof(buffer), 0);
     check_syscall_err(err, "get_response_chopstick err");
     print_log("Got response for chopstick: %s\n", recv_buffer);
 
