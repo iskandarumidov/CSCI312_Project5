@@ -30,7 +30,6 @@ int str_length(char str[]);
 void check_syscall_err(int syscall_err, char *syscall_err_msg);
 
 #define print_log(f_, ...) printf("[%s] ", timestamp()), printf((f_), ##__VA_ARGS__), printf("")
-// #define SERVERPORT 31200 // TODO - should I set a dedicated known port for controller or use old phil port?
 #define SERVERIP "127.0.0.1"
 #define NULL 0
 #define MAX_CLIENT_QUEUE 5
@@ -61,7 +60,6 @@ int get_random_in_range(int low, int high)
 
 // int not_random = 0;
 // int not_random = 5;
-// BUG - not so random!
 // int get_random_in_range(int low, int high)
 // {
 // 	return not_random++;

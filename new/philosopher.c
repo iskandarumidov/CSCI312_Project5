@@ -136,13 +136,9 @@ int main(int argc, char *argv[])
         close(sock_write);
 
         // Now that I have full coordinator message, I am done communicating with peers
-
-        // TODO - now think of logic to cut out the coordinator and rearrange the ring
     }
 
     set_coordinator_next(coordinator_message);
-
-    // BUG - important - need to find port from message
 
     // detect if I am the coordinator
     if (coordinator == id)
@@ -159,10 +155,7 @@ int main(int argc, char *argv[])
     // Need to replace next port by coordinator's port?
     setup_chopsticks();
 
-    // TODO - implement algorithm of getting one chopstick at a time. Log attempts to get chopstick and successes
-
     sleep(10);
-    // BUG - need to think to contact coordinator for all 5 phil
     // Start communication with coordinator only after ring algo completely done
     setup_client_with_port(coordinator_port);
 
@@ -215,7 +208,6 @@ int main(int argc, char *argv[])
                         eat();
                         release_both_chopsticks(left_chopstick, right_chopstick);
                     }
-                    // BUG - should not attempt eating again if failed to get right chopstick
                 }
             }
             else
@@ -231,11 +223,9 @@ int main(int argc, char *argv[])
                     eat();
                     release_both_chopsticks(left_chopstick, right_chopstick);
                 }
-                // BUG - should not attempt eating again if failed to get left chopstick
             }
         }
         think();
-        // BUG - need to implement listening for X somewhere
     }
 
     // TODO - might need to use threads like Hamnes said - one thread listens for messages
@@ -281,7 +271,7 @@ void setup_chopsticks()
         }
         else if (my_index == 5)
         {
-            left_chopstick = 1; // BUG - maybe should be reversed? Also in others?
+            left_chopstick = 1;
             right_chopstick = 5;
         }
     }
@@ -427,7 +417,7 @@ void setup_chopsticks()
     }
 }
 
-void set_coordinator_next(char str[]) // TODO - strs old, do I even need to detect next PHIL ID? Since I have port?
+void set_coordinator_next(char str[])
 {
     int max = id;
     char *token = strtok(str, SEPARATORS);
@@ -449,7 +439,7 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
         token = strtok(NULL, SEPARATORS);
         i++;
     }
-    // BUG - here to determine if next port is to be changed. ALSO - need to include if self is coordinator?
+
     if (my_index + 1 == coordinator_index && coordinator_index == PHILOSOPHER_COUNT - 1)
     {
         next_write_port = read_ports[0];
@@ -462,10 +452,6 @@ void set_coordinator_next(char str[]) // TODO - strs old, do I even need to dete
     {
         next_write_port = read_ports[my_index + 2];
     }
-
-    // TODO - here need to go through string again, and assign chopsticks. Separate function is OK
-    // TODO - need to figure out how to wait periods of time? Alarm? Another signal/syscall? Easier way? Use sleep for simplicuty?
-    // TODO - can use existing random number gen for phase minute generation?
 
     coordinator = max;
     coordinator_port = read_ports[coordinator_index];

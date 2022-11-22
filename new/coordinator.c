@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
                             print_log("CHOPSTICKS: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
                             display_queue();
                         }
-                        else if (buf[0] == 'R') // BUG - I might need to release 2 chopsticks at once!! will need to change client too
+                        else if (buf[0] == 'R')
                         {
                             print_log("RECEIVED R MESSAGE: %s\n", buf);
                             char *token = strtok(buf2, SEPARATORS);
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 
                                     char msg[BUFFER_LEN];
                                     err = send(fd_to_run, "X", 1, 0);
-                                    check_syscall_err(err, "Failed to send X to philosopher"); // BUG - isEat, isThink - on client side, to make sure don't request the same ones? or other ones while eating/thinking
+                                    check_syscall_err(err, "Failed to send X to philosopher");
                                     dequeue();
                                     display_queue();
                                 }
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
                             print_log("CHOPSTICKS: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
                             display_queue();
                         }
-                        else if (buf[0] == 'W') // BUG - I might need to release 2 chopsticks at once!! will need to change client too
+                        else if (buf[0] == 'W')
                         {
                             print_log("RECEIVED W MESSAGE: %s\n", buf);
                             char *token = strtok(buf2, SEPARATORS);
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
 
                                     char msg[BUFFER_LEN];
                                     err = send(fd_to_run, "X", 1, 0);
-                                    check_syscall_err(err, "Failed to send X to philosopher"); // BUG - isEat, isThink - on client side, to make sure don't request the same ones? or other ones while eating/thinking
+                                    check_syscall_err(err, "Failed to send X to philosopher");
                                     dequeue();
                                     display_queue();
                                 }
