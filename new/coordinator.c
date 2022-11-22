@@ -33,27 +33,23 @@ int fd_to_chopstick[9][2] = {
 #define MAX_CONNECTIONS 1000
 int all_connections[MAX_CONNECTIONS];
 
-#define print_log(f_, ...) printf("[%s] COORDIN: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
+#define print_log(f_, ...) printf("[%s] COORDINAT:", timestamp()), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
 #include "queue.c"
 
 void extract_ids();
 int create_tcp_server_socket();
-// void print_conn_arr();
-// void print_chopstick_arr();
 
 int incoming_id;
 int incoming_chopstick;
 void extract_incoming_id(char str[]);
-
-// TODO - still haven't touched queue and shared var
 
 int main(int argc, char *argv[])
 {
     id = atoi(argv[1]);
     self_read_port = atoi(argv[2]);
     sprintf(philosopher_ids_string, "%s", argv[3]);
-    print_log("INSIDE COORDINATOR! Coord msg: %s\n", philosopher_ids_string);
+    print_log("Coordinator started. Coord ID: %d\n", id);
     extract_ids();
 
     fd_set read_fd_set;
@@ -163,21 +159,18 @@ int main(int argc, char *argv[])
                                 chopsticks[incoming_chopstick] = 0;
                                 print_log("GIVING CHOPSTICK %d TO PHILOSOPHER %d\n", incoming_chopstick, incoming_id);
                                 int wr_len = send(all_connections[i], "Y", 1, 0);
-                                // int wr_len = send(all_connections[i], "Y", DATA_BUFFER, 0);
                                 check_syscall_err(wr_len, "Failed to send 1 to philosopher");
                             }
                             else
                             {
                                 print_log("CHOPSTICK %d IS BUSY, ADDING PHILOSOPHER %d TO QUEUE\n", incoming_chopstick, incoming_id);
                                 int wr_len = send(all_connections[i], "N", 1, 0);
-                                // int wr_len = send(all_connections[i], "N", DATA_BUFFER, 0);
                                 check_syscall_err(wr_len, "Failed to send 0 to philosopher");
                                 enqueue(all_connections[i]);
                                 display_queue();
                             }
                             print_log("CHOPSTICKS: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
                             display_queue();
-                            // print_log("QUEUE: %d %d %d %d %d %d %d %d %d\n", queue_array[0], queue_array[1], queue_array[2], queue_array[3], queue_array[4], queue_array[5], queue_array[6], queue_array[7], queue_array[8]);
                         }
                         else if (buf[0] == 'R') // BUG - I might need to release 2 chopsticks at once!! will need to change client too
                         {
@@ -189,14 +182,13 @@ int main(int argc, char *argv[])
 
                             chopsticks[incoming_chopstick] = 1;
 
-                            // NEED TO UNCOMMENT FOR X
+                            // Send X after one chopstick was released
                             int fd_to_run = peek();
                             if (fd_to_run > 0)
                             {
                                 int my_left_chopstick = fd_to_chopstick[fd_to_run][0];
                                 int my_right_chopstick = fd_to_chopstick[fd_to_run][1];
                                 print_log("CHECK IF BOTH CHOPSTICKS ARE READY FOR FD: %d, left - %d, right - %d\n", fd_to_run, my_left_chopstick, my_right_chopstick);
-                                // if (my_left_chopstick == 1 && my_right_chopstick == 1)
                                 if (chopsticks[my_left_chopstick] == 1 && chopsticks[my_right_chopstick] == 1)
                                 {
                                     chopsticks[my_left_chopstick] = 0;
@@ -204,12 +196,7 @@ int main(int argc, char *argv[])
                                     print_log("SENDING X - GIVING CHOPSTICKS %d AND %d TO PHILOSOPHER WITH FD %d\n", my_left_chopstick, my_right_chopstick, fd_to_run);
 
                                     char msg[BUFFER_LEN];
-                                    // sprintf(msg, "X;%d;%d;", id, chopstick);
-                                    // sprintf(msg, "X;");
                                     err = send(fd_to_run, "X", 1, 0);
-                                    // err = send(fd_to_run, msg, sizeof(msg), 0);
-
-                                    // int wr_len = send(fd_to_run, "1", DATA_BUFFER, 0); // TODO send X
                                     check_syscall_err(err, "Failed to send X to philosopher"); // BUG - isEat, isThink - on client side, to make sure don't request the same ones? or other ones while eating/thinking
                                     dequeue();
                                     display_queue();
@@ -238,6 +225,7 @@ int main(int argc, char *argv[])
                             chopsticks[incoming_right_chopstick] = 1;
                             print_log("CHOPSTICKS AFTER W: %d %d %d %d %d\n", chopsticks[1], chopsticks[2], chopsticks[3], chopsticks[4], chopsticks[5]);
 
+                            // Send X after both chopsticks were released
                             int fd_to_run = peek();
                             if (fd_to_run > 0)
                             {
@@ -268,7 +256,7 @@ int main(int argc, char *argv[])
                     }
                     if (ret_val == -1)
                     {
-                        printf("recv() failed for fd: %d [%s]\n", all_connections[i], strerror(errno));
+                        print_log("recv() failed for fd: %d\n", all_connections[i]);
                         break;
                     }
                 }
@@ -279,7 +267,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* Last step: Close all the sockets */
     for (i = 0; i < MAX_CONNECTIONS; i++)
     {
         if (all_connections[i] > 0)
@@ -331,13 +318,3 @@ int create_tcp_server_socket()
     check_syscall_err(ret_val, "Listen failed");
     return fd;
 }
-
-// void print_conn_arr()
-// {
-//     int i;
-//     for (i = 0; i < 20; i++)
-//     {
-//         printf("%d ", all_connections[i]);
-//     }
-//     printf("\n");
-// }

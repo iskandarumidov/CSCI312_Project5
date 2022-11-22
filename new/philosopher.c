@@ -1,10 +1,8 @@
 #include "soc.h"
-// #include <pthread.h>
 // TODO - try changing printf in print_log to fprintf(err) for low latency? no buffering?
 void set_coordinator_next(char str[]);
 void setup_server();
 void setup_client();
-// void setup_client(int port);
 void setup_client_with_port(int port);
 void append_cur_id();
 void setup_chopsticks();
@@ -53,7 +51,7 @@ char buffer_x[BUFFER_LEN];
 // pthread_t thread;
 // pthread_mutex_t lock;
 
-#define print_log(f_, ...) printf("[%s] PHIL ID: %d ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
+#define print_log(f_, ...) printf("[%s] PHIL ID %d: ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
 int main(int argc, char *argv[])
 {
@@ -61,6 +59,7 @@ int main(int argc, char *argv[])
     self_read_port = atoi(argv[2]);
     next_write_port = atoi(argv[3]);
     should_start_election = atoi(argv[4]);
+    // printf("SHOULD START ELECTION: %d", should_start_election);
 
     if (should_start_election)
     {
@@ -500,7 +499,6 @@ void setup_client()
 
     check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
     sleep(1);
-    // print_log("Writer created\n");
 }
 
 // TODO - delete the other version and refactor all?
@@ -515,12 +513,11 @@ void setup_client_with_port(int port)
 
     check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
     sleep(1);
-    // print_log("Writer created\n");
 }
 
 void think()
 {
-    int think_time = real_get_random_in_range(1200000, 5000000); // 1.2s - 4s   // BUG - real_get_random_in_range
+    int think_time = real_get_random_in_range(1200000, 5000000); // 1.2s - 5s   // BUG - real_get_random_in_range - change back to one rand function when done
     print_log("Thinking for %.2f\n", think_time / (float)1000000);
     is_thinking = 1;
     usleep(think_time);
@@ -530,7 +527,7 @@ void think()
 
 void eat()
 {
-    int eat_time = real_get_random_in_range(1200000, 5000000); // 1.2s - 4s // BUG - real_get_random_in_range
+    int eat_time = real_get_random_in_range(1200000, 5000000); // 1.2s - 5s // BUG - real_get_random_in_range - change back to one rand function when done
     print_log("Eating for %.2f\n", eat_time / (float)1000000);
     is_eating = 1;
     usleep(eat_time);
@@ -547,7 +544,7 @@ int request_chopstick(int chopstick)
     check_syscall_err(err, "chopstick err");
 
     char recv_buffer[2];
-    err = recv(sock_write, recv_buffer, 2, 0); // BUG - when Y has 1 bytes to read, extra garbage is appended?
+    err = recv(sock_write, recv_buffer, 2, 0);
     check_syscall_err(err, "get_response_chopstick err");
     print_log("Got response for chopstick: %s\n", recv_buffer);
 
@@ -644,7 +641,7 @@ void send_i_message()
 //         // print_log("FROM PHILOSOPHER (IN THREAD): %s\n", buffer);
 //         pthread_mutex_unlock(&lock);
 
-//         err = write(newsocket_in_thread, "1", sizeof("1")); // BUG - need to respond to X?
+//         err = write(newsocket_in_thread, "1", sizeof("1"));
 //         check_syscall_err(err, "write coord error");
 //     }
 //     return NULL;

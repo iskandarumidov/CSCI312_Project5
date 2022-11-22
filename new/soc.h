@@ -31,7 +31,6 @@ int str_length(char str[]);
 void check_syscall_err(int syscall_err, char *syscall_err_msg);
 
 #define print_log(f_, ...) printf("[%s] ", timestamp()), printf((f_), ##__VA_ARGS__), printf("")
-// #define SERVERPORT 31200 // TODO - should I set a dedicated known port for controller or use old phil port?
 #define SERVERIP "127.0.0.1"
 #define NULL 0
 #define MAX_CLIENT_QUEUE 5
@@ -39,10 +38,8 @@ void check_syscall_err(int syscall_err, char *syscall_err_msg);
 #define SEPARATORS "ECIQRDXW;" // added more separators
 #define PHILOSOPHER_COUNT 6
 
-int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};	 // PHIL reads at this
-int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200}; // PHIL writes here
-// int read_ports[6] = {31200, 31201};
-// int write_ports[6] = {31201, 31200};
+int read_ports[6] = {31200, 31201, 31202, 31203, 31204, 31205};	 // Philosophers read at this port
+int write_ports[6] = {31201, 31202, 31203, 31204, 31205, 31200}; // Philosophers write at this port
 
 typedef struct sockaddr_in sockaddr_in;
 
@@ -61,7 +58,6 @@ char *timestamp()
 // }
 
 int not_random = 0;
-// int not_random = 5;
 // BUG - not so random!
 int get_random_in_range(int low, int high)
 {
