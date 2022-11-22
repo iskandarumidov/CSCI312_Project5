@@ -58,7 +58,7 @@ char *timestamp()
 // }
 
 int not_random = 0;
-// BUG - not so random!
+// BUG - not so random! - need to uncomment
 int get_random_in_range(int low, int high)
 {
 	return not_random++;

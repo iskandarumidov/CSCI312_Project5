@@ -2,7 +2,6 @@
 // TODO - try changing printf in print_log to fprintf(err) for low latency? no buffering?
 void set_coordinator_next(char str[]);
 void setup_server();
-void setup_client();
 void setup_client_with_port(int port);
 void append_cur_id();
 void setup_chopsticks();
@@ -59,13 +58,12 @@ int main(int argc, char *argv[])
     self_read_port = atoi(argv[2]);
     next_write_port = atoi(argv[3]);
     should_start_election = atoi(argv[4]);
-    // printf("SHOULD START ELECTION: %d", should_start_election);
 
     if (should_start_election)
     {
         // Starting election. Sending out first election message
         sleep(1); // Wait until readers are ready; might need more than 1 sec
-        setup_client();
+        setup_client_with_port(next_write_port);
         append_cur_id();
         err = write(sock_write, election_message, sizeof(election_message));
         check_syscall_err(err, "write error");
@@ -82,7 +80,7 @@ int main(int argc, char *argv[])
 
         // Done with election. Now send out Coordinator message
         sleep(1);
-        setup_client();
+        setup_client_with_port(next_write_port);
         sprintf(coordinator_message, "%s", election_message);
         coordinator_message[0] = 'C';
         err = write(sock_write, coordinator_message, sizeof(coordinator_message));
@@ -113,7 +111,7 @@ int main(int argc, char *argv[])
 
         // Done listening. Need to send election message to next
         sleep(1);
-        setup_client();
+        setup_client_with_port(next_write_port);
         err = write(sock_write, election_message, sizeof(election_message));
         check_syscall_err(err, "write error");
         close(sock_write);
@@ -129,7 +127,7 @@ int main(int argc, char *argv[])
 
         // Send Coordinator message to next node
         sleep(1);
-        setup_client();
+        setup_client_with_port(next_write_port);
         coordinator_message[0] = 'C';
         err = write(sock_write, coordinator_message, sizeof(coordinator_message));
         check_syscall_err(err, "write error");
@@ -140,7 +138,7 @@ int main(int argc, char *argv[])
 
     set_coordinator_next(coordinator_message);
 
-    // detect if I am the coordinator
+    // Detect if I am the coordinator
     if (coordinator == id)
     {
         char phil_id_char[BUFFER_LEN];
@@ -152,7 +150,6 @@ int main(int argc, char *argv[])
     }
 
     // If I'm here, it means I'm not the coordinator
-    // Need to replace next port by coordinator's port?
     setup_chopsticks();
 
     sleep(10);
@@ -178,7 +175,7 @@ int main(int argc, char *argv[])
     // TODO - END LISTEN FOR X
 
     int i = 0;
-    // while (1)
+    // while (1)    // BUG - uncomment in the end
     for (i = 0; i < 20; i++)
     {
         if (is_eating == 0 && is_thinking == 0)
@@ -199,8 +196,7 @@ int main(int argc, char *argv[])
                 {
                     print_log("Failed to get right chopstick\n");
                     release_chopstick(left_chopstick);
-                    // while (1) // DO NOT THINK/REQUEST NEW CHOPSTICK IF YOU FAILED. you are added to coordinator queue, just wait for X
-                    // {
+                    // DO NOT THINK/REQUEST NEW CHOPSTICK IF YOU FAILED. you are added to coordinator queue, just wait for X
                     int got_x = receive_x_from_coordinator();
                     if (got_x)
                     {
@@ -214,8 +210,7 @@ int main(int argc, char *argv[])
             {
 
                 print_log("Failed to get left chopstick\n");
-                // while (1) // DO NOT THINK/REQUEST NEW CHOPSTICK IF YOU FAILED. you are added to coordinator queue, just wait for X
-                // {
+                // DO NOT THINK/REQUEST NEW CHOPSTICK IF YOU FAILED. you are added to coordinator queue, just wait for X
                 int got_x = receive_x_from_coordinator();
                 if (got_x)
                 {
@@ -237,12 +232,8 @@ int main(int argc, char *argv[])
 void append_cur_id()
 {
     char id_char[100];
-    sprintf(id_char, "%d", id);
-    char semicolon_char[100];
-    sprintf(semicolon_char, "%c", ';');
-
+    sprintf(id_char, "%d;", id);
     strncat(election_message, id_char, str_length(id_char));
-    strncat(election_message, semicolon_char, str_length(semicolon_char));
 }
 
 void setup_chopsticks()
@@ -474,20 +465,6 @@ void setup_server()
     check_syscall_err(new_sock_read, "Socket accept failed");
 }
 
-void setup_client()
-{
-    sock_write = socket(AF_INET, SOCK_STREAM, 0);
-    check_syscall_err(sock_write, "Socket opening failed");
-
-    read_adr.sin_family = AF_INET;
-    read_adr.sin_port = htons(next_write_port);
-    read_adr.sin_addr.s_addr = inet_addr(SERVERIP);
-
-    check_syscall_err(connect(sock_write, (struct sockaddr *)&read_adr, sizeof(read_adr)), "Error connecting");
-    sleep(1);
-}
-
-// TODO - delete the other version and refactor all?
 void setup_client_with_port(int port)
 {
     sock_write = socket(AF_INET, SOCK_STREAM, 0);
