@@ -26,7 +26,6 @@
 
 char *timestamp();
 int get_random_in_range(int low, int high);
-int real_get_random_in_range(int low, int high);
 int str_length(char str[]);
 void check_syscall_err(int syscall_err, char *syscall_err_msg);
 
@@ -51,20 +50,7 @@ char *timestamp()
 	return time_arr;
 }
 
-// int get_random_in_range(int low, int high)
-// {
-// 	srand(time(NULL));
-// 	return (rand() % (high - low + 1)) + low;
-// }
-
-int not_random = 0;
-// BUG - not so random! - need to uncomment
 int get_random_in_range(int low, int high)
-{
-	return not_random++;
-}
-
-int real_get_random_in_range(int low, int high)
 {
 	srand(time(NULL));
 	return (rand() % (high - low + 1)) + low;

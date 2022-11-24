@@ -1,7 +1,7 @@
 #include "soc.h"
 #define print_log(f_, ...) printf("[%s] STARTER  : ", timestamp()), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro to print STARTER
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) // Startup 6 philosophers. One of them will be coordinator later on
 {
     print_log("Running %d processes...\n", PHILOSOPHER_COUNT);
 

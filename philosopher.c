@@ -1,5 +1,5 @@
 #include "soc.h"
-// TODO - try changing printf in print_log to fprintf(err) for low latency? no buffering?
+
 void set_coordinator_next(char str[]);
 void setup_server();
 void setup_client_with_port(int port);
@@ -12,7 +12,6 @@ void release_chopstick(int chopstick);
 void send_i_message();
 int receive_x_from_coordinator();
 void release_both_chopsticks(int left, int right);
-// void *process(void *arg);
 
 int id = -1;
 int coordinator = -1;
@@ -47,8 +46,6 @@ int is_thinking = 0;
 
 int got_x_from_coordinator = 0;
 char buffer_x[BUFFER_LEN];
-// pthread_t thread;
-// pthread_mutex_t lock;
 
 #define print_log(f_, ...) printf("[%s] PHIL ID %d: ", timestamp(), id), printf((f_), ##__VA_ARGS__), printf("") // Redefine macro, set philosopher ID
 
@@ -158,25 +155,10 @@ int main(int argc, char *argv[])
 
     send_i_message();
     sleep(1);
-    real_get_random_in_range(1200000, 5000000);
-
-    // TODO - listen for X here?
-    /*
-    if (pthread_mutex_init(&lock, NULL) != 0)
-    {
-        print_log("mutex init has failed\n");
-        return 1;
-    }
-
-    err = pthread_create(&thread, NULL, &process, NULL);
-    if (err != 0)
-        printf("\nThread can't be created :[%s]", strerror(err));
-    pthread_detach(thread);*/
-    // TODO - END LISTEN FOR X
+    get_random_in_range(1200000, 5000000);
 
     int i = 0;
-    // while (1)    // BUG - uncomment in the end
-    for (i = 0; i < 20; i++)
+    while (1)
     {
         if (is_eating == 0 && is_thinking == 0)
         {
@@ -223,20 +205,17 @@ int main(int argc, char *argv[])
         think();
     }
 
-    // TODO - might need to use threads like Hamnes said - one thread listens for messages
-    // TODO - writers to coord are in MAIN, readers are in thread
-    // pthread_mutex_destroy(&lock);
     return EXIT_SUCCESS;
 }
 
-void append_cur_id()
+void append_cur_id() // Append current phil ID to message
 {
     char id_char[100];
     sprintf(id_char, "%d;", id);
     strncat(election_message, id_char, str_length(id_char));
 }
 
-void setup_chopsticks()
+void setup_chopsticks() // Determine which chopstick a philosopher will use
 {
     if (coordinator_index == 0)
     {
@@ -408,7 +387,7 @@ void setup_chopsticks()
     }
 }
 
-void set_coordinator_next(char str[])
+void set_coordinator_next(char str[]) // After election is done, coordinator has to be chosen - the highest Phil ID
 {
     int max = id;
     char *token = strtok(str, SEPARATORS);
@@ -448,7 +427,7 @@ void set_coordinator_next(char str[])
     coordinator_port = read_ports[coordinator_index];
 }
 
-void setup_server()
+void setup_server() // Setup server on known port
 {
     sock_read = socket(AF_INET, SOCK_STREAM, 0);
     check_syscall_err(sock_read, "Socket opening failed");
@@ -465,7 +444,7 @@ void setup_server()
     check_syscall_err(new_sock_read, "Socket accept failed");
 }
 
-void setup_client_with_port(int port)
+void setup_client_with_port(int port) // Setup client listening on port
 {
     sock_write = socket(AF_INET, SOCK_STREAM, 0);
     check_syscall_err(sock_write, "Socket opening failed");
@@ -480,7 +459,7 @@ void setup_client_with_port(int port)
 
 void think()
 {
-    int think_time = real_get_random_in_range(1200000, 5000000); // 1.2s - 5s   // BUG - real_get_random_in_range - change back to one rand function when done
+    int think_time = get_random_in_range(1200000, 5000000); // 1.2s - 5s
     print_log("Thinking for %.2f\n", think_time / (float)1000000);
     is_thinking = 1;
     usleep(think_time);
@@ -490,7 +469,7 @@ void think()
 
 void eat()
 {
-    int eat_time = real_get_random_in_range(1200000, 5000000); // 1.2s - 5s // BUG - real_get_random_in_range - change back to one rand function when done
+    int eat_time = get_random_in_range(1200000, 5000000); // 1.2s - 5s
     print_log("Eating for %.2f\n", eat_time / (float)1000000);
     is_eating = 1;
     usleep(eat_time);
@@ -498,7 +477,7 @@ void eat()
     print_log("=== DONE EATING ===\n");
 }
 
-int request_chopstick(int chopstick)
+int request_chopstick(int chopstick) // Q message - request 1 chopstick from coordinator
 {
     char msg[BUFFER_LEN];
     sprintf(msg, "Q;%d;%d;", id, chopstick);
@@ -509,7 +488,7 @@ int request_chopstick(int chopstick)
     char recv_buffer[2];
     err = recv(sock_write, recv_buffer, 2, 0);
     check_syscall_err(err, "get_response_chopstick err");
-    print_log("Got response for chopstick: %s\n", recv_buffer);
+    print_log("Got response for chopstick: %c\n", recv_buffer[0]);
 
     if (recv_buffer[0] == 'Y')
     {
@@ -521,7 +500,7 @@ int request_chopstick(int chopstick)
     }
 }
 
-void release_chopstick(int chopstick)
+void release_chopstick(int chopstick) // R message - one chopstick is released when philosopher can't get the other one
 {
     char msg[BUFFER_LEN];
     sprintf(msg, "R;%d;%d;", id, chopstick);
@@ -530,7 +509,7 @@ void release_chopstick(int chopstick)
     check_syscall_err(err, "release chopstick err");
 }
 
-void release_both_chopsticks(int left, int right)
+void release_both_chopsticks(int left, int right) // W message - both chopsticks can be released at the same time when philosopher is done eating
 {
     char msg[BUFFER_LEN];
     sprintf(msg, "W;%d;%d;%d;", id, left, right);
@@ -539,12 +518,12 @@ void release_both_chopsticks(int left, int right)
     check_syscall_err(err, "release both chopsticks err");
 }
 
-int receive_x_from_coordinator()
+int receive_x_from_coordinator() // X type message comes only from coordinator. It indicates that philosopher can start eating
 {
-    char recv_buffer[2];                       // BUG - global vars potentially unsafe for threads? Like ERR????
-    err = recv(sock_write, recv_buffer, 2, 0); // BUG - when Y has 1 bytes to read, extra garbage is appended?
+    char recv_buffer[2];
+    err = recv(sock_write, recv_buffer, 2, 0);
     check_syscall_err(err, "get_response_chopstick err");
-    print_log("Got response for chopstick: %s\n", recv_buffer);
+    print_log("Got response for chopstick: %c\n", recv_buffer[0]);
 
     if (recv_buffer[0] == 'X')
     {
@@ -556,7 +535,7 @@ int receive_x_from_coordinator()
     }
 }
 
-void send_i_message()
+void send_i_message() // I message is used to signal to coordinator which chopsticks a Philosopher uses
 {
     char msg[BUFFER_LEN];
     sprintf(msg, "I;%d;%d;%d;", id, left_chopstick, right_chopstick);
@@ -564,48 +543,3 @@ void send_i_message()
     err = send(sock_write, msg, sizeof(msg), 0);
     check_syscall_err(err, "send i message err");
 }
-
-// void *process(void *arg)
-// {
-//     pthread_mutex_lock(&lock);
-//     printf("Job has started\n");
-
-//     err = read(sock_fd, buffer, sizeof(buffer));
-//     printf("FROM COORDINATOR (IN THREAD): %s\n", buffer);
-
-//     printf("Job has finished\n");
-//     pthread_mutex_unlock(&lock);
-
-//     return NULL;
-// }
-
-// void *process(void *arg)
-// {
-//     unsigned int newsocket_in_thread = *((unsigned int *)arg);
-//     while (1)
-//     {
-//         pthread_mutex_lock(&lock);
-//         sprintf(buffer_x, "");
-//         // err = read(newsocket_in_thread, buffer, sizeof(buffer));
-//         err = recv(newsocket_in_thread, buffer_x, sizeof(buffer_x), 0);
-//         check_syscall_err(err, "get_response_chopstick err");
-//         print_log("IN THREAD: X: %s\n", buffer_x);
-//         if (buffer_x[0] == 'X')
-//         {
-//         }
-//         // if ()
-//         // if (err == 0)
-//         // {
-//         //     print_log("Client disconnected\n");
-//         //     break;
-//         //     // exit(EXIT_SUCCESS);
-//         // }
-//         // check_syscall_err(err, "thread read failed");
-//         // print_log("FROM PHILOSOPHER (IN THREAD): %s\n", buffer);
-//         pthread_mutex_unlock(&lock);
-
-//         err = write(newsocket_in_thread, "1", sizeof("1"));
-//         check_syscall_err(err, "write coord error");
-//     }
-//     return NULL;
-// }

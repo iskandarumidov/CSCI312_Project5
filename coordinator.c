@@ -81,22 +81,18 @@ int main(int argc, char *argv[])
         }
 
         /* Invoke select() and then wait! */
-        // printf("\nUsing select() to listen for incoming events\n");
         ret_val = select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL);
 
         /* select() woke up. Identify the fd that has events */
         if (ret_val >= 0)
         {
-            // printf("Select returned with %d\n", ret_val);
             /* Check if the fd with event is the server fd */
             if (FD_ISSET(server_fd, &read_fd_set))
             {
                 /* accept the new connection */
-                // printf("Returned fd is %d (server's fd)\n", server_fd);
                 new_fd = accept(server_fd, (struct sockaddr *)&new_addr, &addrlen);
                 if (new_fd >= 0)
                 {
-                    // printf("Accepted a new connection with fd: %d\n", new_fd);
                     for (i = 0; i < MAX_CONNECTIONS; i++)
                     {
                         if (all_connections[i] < 0)
@@ -121,19 +117,14 @@ int main(int argc, char *argv[])
                 if ((all_connections[i] > 0) && (FD_ISSET(all_connections[i], &read_fd_set)))
                 {
                     /* read incoming data */
-                    // printf("Returned fd is %d [index, i: %d]\n", all_connections[i], i);
                     ret_val = recv(all_connections[i], buf, DATA_BUFFER, 0);
                     if (ret_val == 0)
                     {
-                        // printf("Closing connection for fd:%d\n", all_connections[i]);
                         close(all_connections[i]);
                         all_connections[i] = -1; /* Connection is now closed */
                     }
                     if (ret_val > 0)
                     {
-                        // printf("Received data (len %d bytes, fd: %d): %s\n", ret_val, all_connections[i], buf);
-                        // sprintf(buf2, "%s", buf);
-                        // extract_incoming_id(buf2);
                         sprintf(buf2, "%s", buf);
                         if (buf[0] == 'I')
                         {
@@ -144,7 +135,7 @@ int main(int argc, char *argv[])
                             fd_to_chopstick[all_connections[i]][0] = atoi(token);
                             token = strtok(NULL, SEPARATORS);
                             fd_to_chopstick[all_connections[i]][1] = atoi(token);
-                            print_log("FD TO CHOP: l - %d, r - %d\n", fd_to_chopstick[all_connections[i]][0], fd_to_chopstick[all_connections[i]][1]);
+                            // print_log("FD TO CHOP: l - %d, r - %d\n", fd_to_chopstick[all_connections[i]][0], fd_to_chopstick[all_connections[i]][1]);
                         }
                         else if (buf[0] == 'Q')
                         {
